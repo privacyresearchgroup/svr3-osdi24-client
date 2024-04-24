@@ -52,6 +52,16 @@ pub fn new_handshake(
     new_handshake_with_override(mrenclave, attestation_msg, current_time, None)
 }
 
+pub fn new_handshake_simulated(attestation_msg: &[u8]) -> Result<Handshake> {
+
+    // Deserialize attestation handshake start.
+    let handshake_start = svr::ClientHandshakeStart::decode(attestation_msg)?;
+    let handshake = Handshake::for_simulated_sgx(
+        &handshake_start.evidence)?;
+
+    Ok(handshake.0)
+}
+
 pub fn new_handshake_with_override(
     mrenclave: &[u8],
     attestation_msg: &[u8],

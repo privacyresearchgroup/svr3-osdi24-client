@@ -6,6 +6,7 @@
 use std::collections::HashMap;
 use std::iter;
 use std::net::{Ipv4Addr, Ipv6Addr};
+use std::num::NonZeroU16;
 use std::time::Duration;
 
 use const_str::ip_addr;
@@ -35,6 +36,7 @@ const DOMAIN_CONFIG_CHAT: DomainConfig = DomainConfig {
     ],
     cert: &RootCertificates::Signal,
     proxy_path: "/service",
+    port: None,
 };
 
 const DOMAIN_CONFIG_CHAT_STAGING: DomainConfig = DomainConfig {
@@ -49,6 +51,7 @@ const DOMAIN_CONFIG_CHAT_STAGING: DomainConfig = DomainConfig {
     ],
     cert: &RootCertificates::Signal,
     proxy_path: "/service-staging",
+    port: None,
 };
 
 const DOMAIN_CONFIG_CDSI: DomainConfig = DomainConfig {
@@ -57,6 +60,7 @@ const DOMAIN_CONFIG_CDSI: DomainConfig = DomainConfig {
     ip_v6: &[ip_addr!(v6, "2603:1030:7::1")],
     cert: &RootCertificates::Signal,
     proxy_path: "/cdsi",
+    port: None,
 };
 
 const DOMAIN_CONFIG_CDSI_STAGING: DomainConfig = DomainConfig {
@@ -65,6 +69,7 @@ const DOMAIN_CONFIG_CDSI_STAGING: DomainConfig = DomainConfig {
     ip_v6: &[ip_addr!(v6, "2603:1030:7::732")],
     cert: &RootCertificates::Signal,
     proxy_path: "/cdsi-staging",
+    port: None,
 };
 
 const DOMAIN_CONFIG_SVR2: DomainConfig = DomainConfig {
@@ -73,6 +78,7 @@ const DOMAIN_CONFIG_SVR2: DomainConfig = DomainConfig {
     ip_v6: &[],
     cert: &RootCertificates::Signal,
     proxy_path: "/svr2",
+    port: None,
 };
 
 const DOMAIN_CONFIG_SVR2_STAGING: DomainConfig = DomainConfig {
@@ -81,6 +87,7 @@ const DOMAIN_CONFIG_SVR2_STAGING: DomainConfig = DomainConfig {
     ip_v6: &[],
     cert: &RootCertificates::Signal,
     proxy_path: "/svr2-staging",
+    port: None,
 };
 
 const DOMAIN_CONFIG_SVR3_SGX: DomainConfig = DomainConfig {
@@ -89,6 +96,7 @@ const DOMAIN_CONFIG_SVR3_SGX: DomainConfig = DomainConfig {
     ip_v6: &[],
     cert: &RootCertificates::Signal,
     proxy_path: "/svr3-sgx",
+    port: None,
 };
 
 const DOMAIN_CONFIG_SVR3_SGX_STAGING: DomainConfig = DomainConfig {
@@ -97,6 +105,7 @@ const DOMAIN_CONFIG_SVR3_SGX_STAGING: DomainConfig = DomainConfig {
     ip_v6: &[],
     cert: &RootCertificates::Signal,
     proxy_path: "/svr3-sgx-staging",
+    port: None,
 };
 
 const DOMAIN_CONFIG_SVR3_NITRO: DomainConfig = DomainConfig {
@@ -105,6 +114,7 @@ const DOMAIN_CONFIG_SVR3_NITRO: DomainConfig = DomainConfig {
     ip_v6: &[],
     cert: &RootCertificates::Signal,
     proxy_path: "/svr3-nitro",
+    port: None,
 };
 
 const DOMAIN_CONFIG_SVR3_NITRO_STAGING: DomainConfig = DomainConfig {
@@ -113,6 +123,7 @@ const DOMAIN_CONFIG_SVR3_NITRO_STAGING: DomainConfig = DomainConfig {
     ip_v6: &[],
     cert: &RootCertificates::Signal,
     proxy_path: "/svr3-nitro-staging",
+    port: None,
 };
 
 pub const DOMAIN_CONFIG_SVR3_TPM2SNP: DomainConfig = DomainConfig {
@@ -121,6 +132,7 @@ pub const DOMAIN_CONFIG_SVR3_TPM2SNP: DomainConfig = DomainConfig {
     ip_v6: &[],
     cert: &RootCertificates::Signal,
     proxy_path: "/svr3-tpm2snp",
+    port: None,
 };
 
 pub const DOMAIN_CONFIG_SVR3_TPM2SNP_STAGING: DomainConfig = DomainConfig {
@@ -129,6 +141,7 @@ pub const DOMAIN_CONFIG_SVR3_TPM2SNP_STAGING: DomainConfig = DomainConfig {
     ip_v6: &[],
     cert: &RootCertificates::Signal,
     proxy_path: "/svr3-tpm2snp-staging",
+    port: None,
 };
 
 const PROXY_CONFIG_F: ProxyConfig = ProxyConfig {
@@ -160,6 +173,7 @@ pub struct DomainConfig {
     pub ip_v4: &'static [Ipv4Addr],
     pub ip_v6: &'static [Ipv6Addr],
     pub cert: &'static RootCertificates,
+    pub port: Option<u16>,
 }
 
 impl DomainConfig {
@@ -175,7 +189,10 @@ impl DomainConfig {
             RouteType::Direct,
             self.hostname,
             self.hostname,
-            nonzero!(443u16),
+            match self.port {
+                Some(port) => NonZeroU16::new(port).unwrap(),
+                None => nonzero!(443u16)
+            },
             HttpRequestDecoratorSeq::default(),
             *self.cert,
         )
@@ -246,6 +263,7 @@ impl<'a> Env<'a, Svr3Env<'a>> {
     }
 }
 
+// Note that this is coupled with PPSSSetup<S>::Connections in enclave.rs
 pub struct Svr3Env<'a>(
     EnclaveEndpoint<'a, Sgx>,
     EnclaveEndpoint<'a, Nitro>,

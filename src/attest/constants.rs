@@ -27,9 +27,17 @@ pub const ENCLAVE_ID_CDSI_PROD: &[u8] = ENCLAVE_ID_CDSI_STAGING;
 pub const ENCLAVE_ID_SVR2_PROD: &[u8] =
     &hex!("a6622ad4656e1abcd0bc0ff17c229477747d2ded0495c4ebee7ed35c1789fa97");
 
-pub(crate) const NITRO_EXPECTED_PCRS: SmallMap<&'static [u8], nitro::PcrMap, 1> = SmallMap::new([
+pub(crate) const NITRO_EXPECTED_PCRS: SmallMap<&'static [u8], nitro::PcrMap, 2> = SmallMap::new([
     (
         ENCLAVE_ID_SVR3_NITRO_STAGING,
+        SmallMap::new([
+             (0, hex!("24e56baabe26dcedc58f5753ee979e2f74750df31f43a18f0cf4e08f8ad8c0cd304142cf3441945c3568f4096cb69c66")),
+             (1, hex!("52b919754e1643f4027eeee8ec39cc4a2cb931723de0c93ce5cc8d407467dc4302e86490c01c0d755acfe10dbf657546")),
+             (2, hex!("ec540f3f7f673ab65582d96cf26a747beffcc9392e82f48cfa4ceec47a6ad69a63f9102fc7e1fae37a83a9741814210f")),
+        ]),
+    ),
+    (
+        b"artifact",
         SmallMap::new([
              (0, hex!("24e56baabe26dcedc58f5753ee979e2f74750df31f43a18f0cf4e08f8ad8c0cd304142cf3441945c3568f4096cb69c66")),
              (1, hex!("52b919754e1643f4027eeee8ec39cc4a2cb931723de0c93ce5cc8d407467dc4302e86490c01c0d755acfe10dbf657546")),

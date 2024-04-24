@@ -36,6 +36,8 @@ pub enum Cdsi {}
 
 pub enum Sgx {}
 
+pub enum SgxTest {}
+
 pub enum Nitro {}
 
 pub enum Tpm2Snp {}
@@ -49,6 +51,16 @@ impl EnclaveKind for Cdsi {
 impl EnclaveKind for Sgx {
     fn url_path(enclave: &[u8]) -> PathAndQuery {
         PathAndQuery::try_from(format!("/v1/{}", hex::encode(enclave))).unwrap()
+    }
+}
+
+impl EnclaveKind for SgxTest {
+    fn url_path(enclave: &[u8]) -> PathAndQuery {
+        PathAndQuery::try_from(format!(
+            "/v1/{}",
+            std::str::from_utf8(enclave).expect("valid utf8")
+        ))
+        .unwrap()
     }
 }
 
@@ -73,6 +85,8 @@ impl EnclaveKind for Tpm2Snp {
 }
 
 impl Svr3Flavor for Sgx {}
+
+impl Svr3Flavor for SgxTest {}
 
 impl Svr3Flavor for Nitro {}
 
@@ -338,6 +352,18 @@ impl NewHandshake for Sgx {
         )
     }
 }
+
+impl NewHandshake for SgxTest {
+    fn new_handshake(
+        _params: &EndpointParams<Self>,
+        attestation_message: &[u8],
+    ) -> enclave::Result<enclave::Handshake> {
+        attest::svr2::new_handshake_simulated(
+            attestation_message,
+        )
+    }
+}
+
 
 impl NewHandshake for Cdsi {
     fn new_handshake(

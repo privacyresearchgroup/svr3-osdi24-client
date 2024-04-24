@@ -7,7 +7,7 @@ use std::fmt::{Debug, Display};
 use std::future::Future;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use async_trait::async_trait;
 use attest::client_connection::ClientConnection;
@@ -16,6 +16,7 @@ use derive_where::derive_where;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt as _, StreamExt, TryFutureExt};
 use http::uri::PathAndQuery;
+use prost::Message as ProstMessage;
 use tokio::sync::Mutex;
 use tokio::time::Instant;
 use tokio_tungstenite::WebSocketStream;
@@ -458,6 +459,10 @@ pub type DefaultStream = tokio_boring::SslStream<tokio::net::TcpStream>;
 pub struct AttestedConnection<S> {
     websocket: WebSocketClient<S, WebSocketServiceError>,
     client_connection: ClientConnection,
+    pub connect1_duration: u128,
+    pub hs_duration: u128,
+    pub connect2_duration: u128,
+    pub attestation_doc: Option<Vec<u8>>,
 }
 
 impl<S> AttestedConnection<S> {
@@ -479,10 +484,17 @@ pub(crate) async fn run_attested_interaction<
 >(
     connection: &mut C,
     bytes: B,
-) -> Result<NextOrClose<Vec<u8>>, AttestedConnectionError> {
+) -> Result<(NextOrClose<Vec<u8>>, u128), AttestedConnectionError> {
     let connection = connection.as_mut();
+
+    let start = SystemTime::now();
     connection.send_bytes(bytes).await?;
-    connection.receive_bytes().await
+    let res = connection.receive_bytes().await;
+    let duration = SystemTime::now().duration_since(start).unwrap().as_micros();
+    match res {
+        Ok(next_or_close) => Ok((next_or_close,duration)),
+        Err(e) => Err(e),
+    }
 }
 
 #[derive(Clone, Eq, PartialEq)]
@@ -520,11 +532,15 @@ where
         mut websocket: WebSocketClient<S, WebSocketServiceError>,
         new_handshake: impl FnOnce(&[u8]) -> enclave::Result<enclave::Handshake>,
     ) -> Result<Self, AttestedConnectionError> {
-        let client_connection = authenticate(&mut websocket, new_handshake).await?;
+        let (client_connection, connect1_duration, hs_duration, connect2_duration, evidence) = authenticate(&mut websocket, new_handshake).await?;
 
         Ok(Self {
             websocket,
             client_connection,
+            connect1_duration,
+            hs_duration,
+            connect2_duration,
+            attestation_doc: Some(evidence),
         })
     }
 
@@ -586,14 +602,24 @@ impl TextOrBinary {
 async fn authenticate<S: AsyncDuplexStream>(
     websocket: &mut WebSocketClient<S, WebSocketServiceError>,
     new_handshake: impl FnOnce(&[u8]) -> enclave::Result<enclave::Handshake>,
-) -> Result<ClientConnection, AttestedConnectionError> {
+) -> Result<(ClientConnection, u128,u128,u128, Vec<u8>), AttestedConnectionError> {
+    let connect1_start = SystemTime::now();
     let attestation_msg = websocket
         .receive()
         .await?
         .next_or(WebSocketServiceError::ChannelClosed)?
         .try_into_binary()?;
-    let handshake = new_handshake(attestation_msg.as_ref())?;
+    let connect1_duration = SystemTime::now().duration_since(connect1_start).unwrap().as_micros();
+    // now extract the attestation document from the message
+    let handshake_start_msg = attest::proto::svr::ClientHandshakeStart::decode(attestation_msg.as_ref()).expect("valid hs start");
+    let evidence = handshake_start_msg.evidence;
 
+    let hs_start = SystemTime::now();
+    let handshake = new_handshake(attestation_msg.as_ref())?;
+    let hs_duration = SystemTime::now().duration_since(hs_start).unwrap().as_micros();
+
+
+    let connect2_start = SystemTime::now();
     websocket
         .send(Vec::from(handshake.initial_request()).into())
         .await?;
@@ -603,8 +629,10 @@ async fn authenticate<S: AsyncDuplexStream>(
         .await?
         .next_or(WebSocketServiceError::ChannelClosed)?
         .try_into_binary()?;
+    let connect2_duration = SystemTime::now().duration_since(connect2_start).unwrap().as_micros();
 
-    Ok(handshake.complete(&initial_response)?)
+    let client_connection = handshake.complete(&initial_response)?;
+    Ok((client_connection, connect1_duration, hs_duration, connect2_duration, evidence))
 }
 
 /// Test utilities related to websockets.

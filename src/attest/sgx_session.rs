@@ -12,8 +12,11 @@
 //! public key.
 use std::time::Duration;
 
+use prost::Message;
+
 use crate::dcap::{self, MREnclave};
 use crate::enclave::{Claims, Error, Handshake, Result, UnvalidatedHandshake};
+use crate::proto::svr::AttestationData;
 
 const INVALID_EVIDENCE: &str = "Evidence does not fit expected format";
 const INVALID_ENDORSEMENT: &str = "Endorsement does not fit expected format";
@@ -59,6 +62,16 @@ impl Handshake {
         )?;
 
         Self::with_claims(Claims::from_custom_claims(claims)?)
+    }
+
+    pub(crate) fn for_simulated_sgx(
+        evidence: &[u8],
+    ) -> Result<UnvalidatedHandshake> {
+        // let unattested_evidence_prefix = b"UNATTESTED EVIDENCE:";
+        let evidence_bytes = &evidence[20..];
+        let evidence = AttestationData::decode(evidence_bytes)?;
+
+        Self::with_pubkey(evidence.public_key)
     }
 }
 

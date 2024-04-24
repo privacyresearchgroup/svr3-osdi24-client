@@ -4,6 +4,7 @@
 //
 
 use thiserror::Error;
+use std::time::{Duration, SystemTime};
 
 use crate::enclave::{IntoConnections, PpssSetup};
 use crate::infra::errors::LogSafeDisplay;
@@ -25,6 +26,10 @@ const MASKED_SHARE_SET_FORMAT: u8 = 0;
 #[cfg_attr(test, derive(Debug))]
 pub struct OpaqueMaskedShareSet {
     inner: SerializableMaskedShareSet,
+    pub prep_oprf_dur: u128,
+    pub network_duration: u128,
+    pub finalize_oprf_dur: u128,
+    pub compute_backup_dur: u128, 
 }
 
 // Non pub version of ppss::MaskedShareSet used for serialization
@@ -72,6 +77,10 @@ impl OpaqueMaskedShareSet {
     fn new(inner: MaskedShareSet) -> Self {
         Self {
             inner: inner.into(),
+            prep_oprf_dur: 0u128,
+            network_duration: 0u128,
+            finalize_oprf_dur: 0u128,
+            compute_backup_dur: 0u128,
         }
     }
     fn into_inner(self) -> MaskedShareSet {
@@ -109,7 +118,11 @@ impl OpaqueMaskedShareSet {
         let inner = Self::bincode_options()
             .deserialize(bytes)
             .map_err(|_| DeserializeError::BadFormat)?;
-        Ok(Self { inner })
+        Ok(Self { inner, 
+            prep_oprf_dur: 0u128,
+            network_duration: 0u128,
+            finalize_oprf_dur: 0u128,
+            compute_backup_dur: 0u128, })
     }
 }
 
@@ -224,26 +237,37 @@ impl<S: AsyncDuplexStream + 'static, Env: PpssSetup<S>> PpssOps<S> for Env {
         rng: &mut (impl CryptoRngCore + Send),
     ) -> Result<OpaqueMaskedShareSet, Error> {
         let server_ids = Self::server_ids();
-        let backup = Backup::new(server_ids.as_ref(), password, secret, max_tries, rng)?;
+        let (backup, prepare_oprf_duration) = Backup::new(server_ids.as_ref(), password, secret, max_tries, rng)?;
         let mut connections = connections.into_connections();
+
+        let start = SystemTime::now();
         let futures = connections
             .as_mut()
             .iter_mut()
             .zip(&backup.requests)
             .map(|(connection, request)| run_attested_interaction(connection, request));
         let result = try_join_all(futures).await?;
+
+        let network_duration = SystemTime::now().duration_since(start).unwrap().as_micros();
+        
         let responses = result
             .into_iter()
             .enumerate()
-            .map(|(i, next_or_close)| {
+            .map(|(i, (next_or_close, duration))| {
                 let remote_address = connections.as_ref()[i].remote_address();
+                println!("ws[{}] ({}) call duration: {}", i, remote_address, duration);
                 next_or_close.next_or(Error::Protocol(format!(
                     "no response from {remote_address}"
                 )))
             })
             .collect::<Result<Vec<_>, _>>()?;
-        let share_set = backup.finalize(rng, &responses)?;
-        Ok(OpaqueMaskedShareSet::new(share_set))
+        let (share_set, finalize_oprf_duration, backup_duration)  = backup.finalize(rng, &responses)?;
+        let mut omss = OpaqueMaskedShareSet::new(share_set);
+        omss.prep_oprf_dur = prepare_oprf_duration;
+        omss.finalize_oprf_dur = finalize_oprf_duration;
+        omss.compute_backup_dur = backup_duration;
+        omss.network_duration = network_duration;
+        Ok(omss)
     }
 
     async fn restore(
@@ -263,7 +287,7 @@ impl<S: AsyncDuplexStream + 'static, Env: PpssSetup<S>> PpssOps<S> for Env {
         let responses = result
             .into_iter()
             .enumerate()
-            .map(|(i, next_or_close)| {
+            .map(|(i, (next_or_close, duration))| {
                 let remote_address = connections.as_ref()[i].remote_address();
                 next_or_close.next_or(Error::Protocol(format!(
                     "no response from {remote_address}"
@@ -285,6 +309,10 @@ mod test {
                 masked_shares: vec![],
                 commitment: [0; 32],
             },
+            prep_oprf_dur: 0u128,
+            network_duration: 0u128,
+            finalize_oprf_dur: 0u128,
+            compute_backup_dur: 0u128,
         }
     }
 

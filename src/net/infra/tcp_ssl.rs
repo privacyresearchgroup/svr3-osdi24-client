@@ -50,6 +50,38 @@ pub struct TcpSslConnectorStream(
 );
 
 #[derive(Clone)]
+pub struct UnsecuredConnector {
+    dns_resolver: DnsResolver,
+}
+
+#[async_trait]
+impl TransportConnector for UnsecuredConnector {
+    type Stream = TcpStream;
+
+    async fn connect(
+        &self,
+        connection_params: &ConnectionParams,
+        alpn: Alpn,
+    ) -> Result<StreamAndInfo<Self::Stream>, TransportConnectError> {
+        let StreamAndInfo(tcp_stream, remote_address) = connect_tcp(
+            &self.dns_resolver,
+            connection_params.route_type,
+            &connection_params.sni,
+            connection_params.port,
+        )
+        .await?;
+
+        Ok(StreamAndInfo(tcp_stream, remote_address))
+    }
+}
+
+impl UnsecuredConnector {
+    pub fn new(dns_resolver: DnsResolver) -> Self {
+        Self { dns_resolver }
+    }
+}
+
+#[derive(Clone)]
 pub struct DirectConnector {
     dns_resolver: DnsResolver,
 }
@@ -122,10 +154,22 @@ impl TransportConnector for ProxyConnector {
 
         let inner_stream = match self.use_tls_for_proxy {
             ShouldUseTls::Yes => {
-                let ssl_config = ssl_config(self.proxy_certs, None)?;
+                log::debug!(
+                    "connecting to proxy {}:{}",
+                    self.proxy_host,
+                    self.proxy_port
+                );
+                let ssl_config = ssl_config(self.proxy_certs, &self.proxy_host, None)?;
                 Either::Left(tokio_boring::connect(ssl_config, &self.proxy_host, tcp_stream).await?)
             }
-            ShouldUseTls::No => Either::Right(tcp_stream),
+            ShouldUseTls::No => {
+                log::debug!(
+                    "connecting to proxy {}:{} using TCP",
+                    self.proxy_host,
+                    self.proxy_port
+                );
+                Either::Right(tcp_stream)
+            }
         };
 
         let tls_stream = connect_tls(inner_stream, connection_params, alpn).await?;
@@ -177,10 +221,11 @@ impl ProxyConnector {
 
 fn ssl_config(
     certs: RootCertificates,
+    host_name: &str,
     alpn: Option<Alpn>,
 ) -> Result<ConnectConfiguration, TransportConnectError> {
     let mut ssl = SslConnector::builder(SslMethod::tls_client())?;
-    ssl.set_verify_cert_store(certs.try_into()?)?;
+    certs.apply_to_connector(&mut ssl, host_name)?;
     if let Some(alpn) = alpn {
         ssl.set_alpn_protos(alpn.as_ref())?;
     }
@@ -192,7 +237,7 @@ async fn connect_tls<S: AsyncRead + AsyncWrite + Unpin>(
     connection_params: &ConnectionParams,
     alpn: Alpn,
 ) -> Result<SslStream<S>, TransportConnectError> {
-    let ssl_config = ssl_config(connection_params.certs, Some(alpn))?;
+    let ssl_config = ssl_config(connection_params.certs, &connection_params.sni, Some(alpn))?;
 
     Ok(tokio_boring::connect(ssl_config, &connection_params.sni, transport).await?)
 }
@@ -328,7 +373,7 @@ impl From<ProxyConnector> for TcpSslConnector {
 }
 
 #[cfg(test)]
-mod testutil {
+pub(crate) mod testutil {
     use std::future::Future;
     use std::net::{Ipv6Addr, SocketAddr};
 
@@ -345,10 +390,10 @@ mod testutil {
     use tokio_util::either::Either;
     use warp::Filter;
 
-    pub(super) const SERVER_HOSTNAME: &str = "test-server.signal.org.local";
+    pub(crate) const SERVER_HOSTNAME: &str = "test-server.signal.org.local";
 
     lazy_static! {
-        pub(super) static ref SERVER_CERTIFICATE: CertifiedKey =
+        pub(crate) static ref SERVER_CERTIFICATE: CertifiedKey =
             rcgen::generate_simple_self_signed([SERVER_HOSTNAME.to_string()])
                 .expect("can generate");
     }
@@ -358,7 +403,7 @@ mod testutil {
     /// [`FAKE_RESPONSE`].
     ///
     /// Returns the address of the server and a [`Future`] that runs it.
-    pub(super) fn localhost_http_server() -> (SocketAddr, impl Future<Output = ()>) {
+    pub(crate) fn localhost_http_server() -> (SocketAddr, impl Future<Output = ()>) {
         let filter = warp::any().map(|| FAKE_RESPONSE);
         let server = warp::serve(filter)
             .tls()
@@ -371,7 +416,7 @@ mod testutil {
     /// Makes an HTTP request on the provided stream and asserts on the response.
     ///
     /// Asserts that the server returns 200 and [`FAKE_RESPONSE`].
-    pub(super) async fn make_http_request_response_over(
+    pub(crate) async fn make_http_request_response_over(
         mut stream: impl AsyncRead + AsyncWrite + Unpin,
     ) {
         stream
@@ -393,10 +438,10 @@ mod testutil {
         assert_eq!(lines.last(), Some(FAKE_RESPONSE).as_ref(), "{lines:?}");
     }
 
-    pub(super) const PROXY_HOSTNAME: &str = "test-proxy.signal.org.local";
+    pub(crate) const PROXY_HOSTNAME: &str = "test-proxy.signal.org.local";
 
     lazy_static! {
-        pub(super) static ref PROXY_CERTIFICATE: CertifiedKey =
+        pub(crate) static ref PROXY_CERTIFICATE: CertifiedKey =
             rcgen::generate_simple_self_signed([PROXY_HOSTNAME.to_string()]).expect("can generate");
     }
 

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 use std::num::NonZeroU32;
+use std::time::{Duration, SystemTime};
 
 use prost::Message;
 use rand_core::CryptoRngCore;
@@ -34,40 +35,47 @@ impl<'a> Backup<'a> {
         secret: [u8; 32],
         max_tries: NonZeroU32,
         rng: &mut R,
-    ) -> Result<Self, Error> {
+    ) -> Result<(Self, u128), Error> {
+        let start = SystemTime::now();
         let oprfs = ppss::begin_oprfs(CONTEXT, server_ids, password, rng)?;
         let requests = oprfs
             .iter()
             .map(|oprf| crate::make_create_request(max_tries.into(), &oprf.blinded_elt_bytes))
             .map(|request| request.encode_to_vec())
             .collect();
-        Ok(Self {
+        let duration = SystemTime::now().duration_since(start).unwrap().as_micros();
+        Ok((Self {
             oprfs,
             password,
             secret,
             server_ids: server_ids.into(),
             requests,
-        })
+        }, duration))
     }
 
-    pub fn finalize<R>(self, rng: &mut R, responses: &[Vec<u8>]) -> Result<MaskedShareSet, Error>
+    pub fn finalize<R>(self, rng: &mut R, responses: &[Vec<u8>]) -> Result<(MaskedShareSet, u128, u128), Error>
     where
         R: CryptoRngCore,
     {
+        let start = SystemTime::now();
         let evaluated_elements = responses
             .iter()
             .map(|vec| decode_create_response(vec))
             .collect::<Result<Vec<_>, _>>()?;
         let outputs = ppss::finalize_oprfs(self.oprfs, &evaluated_elements)?;
-        Ok(ppss::backup_secret(
+        let finalize_oprf_duration = SystemTime::now().duration_since(start).unwrap().as_micros();
+        let start = SystemTime::now();
+        let mss = ppss::backup_secret(
             CONTEXT,
             self.password.as_bytes(),
             self.server_ids,
             outputs,
             &self.secret,
             rng,
-        )
-        .expect("matching lengths of server_ids and outputs"))
+        ).expect("matching lengths of server_ids and outputs");
+        let backup_duration = SystemTime::now().duration_since(start).unwrap().as_micros();
+        Ok((mss, finalize_oprf_duration, backup_duration))
+        
     }
 }
 

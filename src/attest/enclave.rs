@@ -139,9 +139,36 @@ impl Handshake {
             claims,
         }))
     }
+
+
+    pub(crate) fn with_pubkey(public_key: Vec<u8>) -> Result<UnvalidatedHandshake> {
+        let mut handshake = snow::Builder::with_resolver(
+            client_connection::NOISE_PATTERN.parse().expect("valid"),
+            Box::new(snow_resolver::Resolver),
+        )
+        .remote_public_key(&public_key)
+        .build_initiator()?;
+        let mut initial_request = vec![0u8; client_connection::NOISE_HANDSHAKE_OVERHEAD];
+        // We send an empty message, but the round-trip to the server and back is still required
+        // in order to complete the noise handshake. If we needed some initial payload we could
+        // add it here in future.
+        let size = handshake.write_message(&[], &mut initial_request)?;
+        let claims = Claims {
+            public_key,
+            raft_group_config: None,
+            custom: HashMap::default(),
+        };
+        initial_request.truncate(size);
+        Ok(UnvalidatedHandshake(Self {
+            handshake,
+            initial_request,
+            claims,
+        }))
+    }
+
 }
 
-pub(crate) struct UnvalidatedHandshake(Handshake);
+pub(crate) struct UnvalidatedHandshake(pub(crate) Handshake);
 
 impl UnvalidatedHandshake {
     pub(crate) fn validate(self, expected_raft_config: &RaftConfig) -> Result<Handshake> {

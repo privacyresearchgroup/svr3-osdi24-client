@@ -19,6 +19,6 @@ mod cert_chain;
 mod endian;
 mod error;
 mod expireable;
-mod proto;
+pub mod proto;
 mod snow_resolver;
 mod util;

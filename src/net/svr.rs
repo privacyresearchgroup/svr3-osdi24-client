@@ -14,7 +14,7 @@ use crate::infra::{AsyncDuplexStream, TransportConnector};
 pub use crate::enclave::Error;
 
 pub struct SvrConnection<Flavor: Svr3Flavor, S> {
-    inner: AttestedConnection<S>,
+    pub inner: AttestedConnection<S>,
     witness: PhantomData<Flavor>,
 }
 

@@ -53,7 +53,7 @@ use crate::expireable::Expireable;
 
 mod ecdsa;
 mod endorsements;
-mod evidence;
+pub(crate) mod evidence;
 mod revocation_list;
 mod sgx_quote;
 mod sgx_report_body;
