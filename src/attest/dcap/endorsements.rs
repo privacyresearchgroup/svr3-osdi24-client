@@ -19,13 +19,13 @@ use strum::EnumCount;
 use std::intrinsics::transmute;
 use std::time::SystemTime;
 
-use crate::cert_chain::CertChain;
-use crate::dcap::ecdsa::{deserialize_ecdsa_signature, EcdsaSigned};
-use crate::dcap::revocation_list::RevocationList;
-use crate::dcap::{Error, Expireable, Result};
-use crate::endian::UInt32LE;
-use crate::error::Context;
-use crate::util;
+use crate::attest::cert_chain::CertChain;
+use crate::attest::dcap::ecdsa::{deserialize_ecdsa_signature, EcdsaSigned};
+use crate::attest::dcap::revocation_list::RevocationList;
+use crate::attest::dcap::{Error, Expireable, Result};
+use crate::attest::endian::UInt32LE;
+use crate::attest::error::Context;
+use crate::attest::util;
 
 // Inline header file references are paths from the root of the repository tree.
 // https://github.com/openenclave/openenclave/tree/v0.17.7
@@ -304,14 +304,14 @@ mod tests {
 
     #[test]
     fn verify_signature_chain_integrity() {
-        let _data = include_bytes!("../../tests/data/dcap.endorsements");
+        let _data = include_bytes!("../../../tests/data/dcap.endorsements");
 
         // let endorsements = Endorsements::from_bytes(data.as_slice());
     }
 
     #[test]
     fn make_endorsements() {
-        const DATA: &[u8] = include_bytes!("../../tests/data/dcap.endorsements");
+        const DATA: &[u8] = include_bytes!("../../../tests/data/dcap.endorsements");
 
         let endorsements = SgxEndorsements::try_from(DATA).expect("failed to parse endorsements");
 
@@ -321,7 +321,7 @@ mod tests {
     #[test]
     fn make_endorsements_header() {
         let data: [u8; std::mem::size_of::<EndorsementsHeader>()] =
-            include_bytes!("../../tests/data/dcap.endorsements")
+            include_bytes!("../../../tests/data/dcap.endorsements")
                 [..std::mem::size_of::<EndorsementsHeader>()]
                 .try_into()
                 .unwrap();
@@ -334,7 +334,7 @@ mod tests {
 
     #[test]
     fn parse_tcb_info_v3() {
-        const DATA: &[u8] = include_bytes!("../../tests/data/tcb_info_v3.json");
+        const DATA: &[u8] = include_bytes!("../../../tests/data/tcb_info_v3.json");
         let tcb_info: TcbInfo = serde_json::from_slice(DATA).unwrap();
         assert_eq!(TcbInfoVersion::V3, tcb_info.version);
         assert_eq!(hex!("00606A000000"), tcb_info.fmspc);
@@ -353,7 +353,7 @@ mod tests {
 
     #[test]
     fn parse_tcb_info_v2() {
-        const DATA: &[u8] = include_bytes!("../../tests/data/tcb_info_v2.json");
+        const DATA: &[u8] = include_bytes!("../../../tests/data/tcb_info_v2.json");
         let tcb_info: TcbInfo = serde_json::from_slice(DATA).unwrap();
         assert_eq!(TcbInfoVersion::V2, tcb_info.version);
         assert_eq!(hex!("00606A000000"), tcb_info.fmspc);
@@ -461,7 +461,8 @@ impl Expireable for TcbInfo {
         // 1. There's no notion of "valid before" like in X509
         // 2. These dates might be *very* recent, and we don't
         //    want to fail requests because of clock skew
-        timestamp <= self.next_update.into()
+        // timestamp <= self.next_update.into()
+        timestamp <= <chrono::DateTime<Utc> as std::convert::Into<SystemTime>>::into(self.next_update)
     }
 }
 
@@ -692,7 +693,7 @@ impl Expireable for EnclaveIdentity {
         // 1. There's no notion of "valid before" like in X509
         // 2. These dates might be *very* recent, and we don't
         //    want to fail requests because of clock skew
-        timestamp <= self.next_update.into()
+        timestamp <= <chrono::DateTime<Utc> as std::convert::Into<SystemTime>>::into(self.next_update)
     }
 }
 

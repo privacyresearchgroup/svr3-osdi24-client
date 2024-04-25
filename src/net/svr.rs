@@ -5,13 +5,13 @@
 
 use std::marker::PhantomData;
 
-use crate::auth::HttpBasicAuth;
-use crate::enclave::{EnclaveEndpointConnection, IntoAttestedConnection, NewHandshake, Svr3Flavor};
-use crate::infra::connection_manager::ConnectionManager;
-use crate::infra::ws::AttestedConnection;
-use crate::infra::{AsyncDuplexStream, TransportConnector};
+use crate::net::auth::HttpBasicAuth;
+use crate::net::enclave::{EnclaveEndpointConnection, IntoAttestedConnection, NewHandshake, Svr3Flavor};
+use crate::net::infra::connection_manager::ConnectionManager;
+use crate::net::infra::ws::AttestedConnection;
+use crate::net::infra::{AsyncDuplexStream, TransportConnector};
 
-pub use crate::enclave::Error;
+pub use crate::net::enclave::Error;
 
 pub struct SvrConnection<Flavor: Svr3Flavor, S> {
     pub inner: AttestedConnection<S>,

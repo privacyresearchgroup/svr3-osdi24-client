@@ -12,8 +12,8 @@ use boring::x509::{X509StoreContext, X509};
 
 use std::time::SystemTime;
 
-use crate::error::ContextError;
-use crate::expireable::Expireable;
+use crate::attest::error::ContextError;
+use crate::attest::expireable::Expireable;
 
 pub(crate) struct CertChainErrorDomain;
 pub(crate) type Error = ContextError<CertChainErrorDomain>;
@@ -137,7 +137,7 @@ impl CertChain {
 
 impl Expireable for CertChain {
     fn valid_at(&self, timestamp: SystemTime) -> bool {
-        let asn1_timestamp = crate::util::system_time_to_asn1_time(timestamp);
+        let asn1_timestamp = crate::attest::util::system_time_to_asn1_time(timestamp);
 
         if asn1_timestamp.is_err() {
             return false;

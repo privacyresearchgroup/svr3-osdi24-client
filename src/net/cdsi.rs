@@ -9,7 +9,7 @@ use std::num::{NonZeroU64, ParseIntError};
 use std::str::FromStr;
 
 use http::StatusCode;
-use libsignal_core::{Aci, Pni};
+use crate::core::{Aci, Pni};
 use prost::Message as _;
 use thiserror::Error;
 use tokio::net::TcpStream;
@@ -18,16 +18,16 @@ use tungstenite::protocol::frame::coding::CloseCode;
 use tungstenite::protocol::CloseFrame;
 use uuid::Uuid;
 
-use crate::auth::HttpBasicAuth;
-use crate::enclave::{Cdsi, EnclaveEndpointConnection};
-use crate::infra::connection_manager::ConnectionManager;
-use crate::infra::errors::TransportConnectError;
-use crate::infra::ws::{
+use crate::net::auth::HttpBasicAuth;
+use crate::net::enclave::{Cdsi, EnclaveEndpointConnection};
+use crate::net::infra::connection_manager::ConnectionManager;
+use crate::net::infra::errors::TransportConnectError;
+use crate::net::infra::ws::{
     AttestedConnection, AttestedConnectionError, NextOrClose, WebSocketConnectError,
     WebSocketServiceError,
 };
-use crate::infra::{AsyncDuplexStream, TransportConnector};
-use crate::proto::cds2::{ClientRequest, ClientResponse};
+use crate::net::infra::{AsyncDuplexStream, TransportConnector};
+use crate::net::proto::cds2::{ClientRequest, ClientResponse};
 
 trait FixedLengthSerializable {
     const SERIALIZED_LEN: usize;
@@ -272,7 +272,7 @@ pub enum LookupError {
     /// protocol error after establishing a connection
     Protocol,
     /// SGX attestation failed.
-    AttestationError(attest::enclave::Error),
+    AttestationError(crate::attest::enclave::Error),
     /// invalid response received from the server
     InvalidResponse,
     /// retry later
@@ -304,9 +304,9 @@ impl From<AttestedConnectionError> for LookupError {
     }
 }
 
-impl From<crate::enclave::Error> for LookupError {
-    fn from(value: crate::enclave::Error) -> Self {
-        use crate::enclave::Error;
+impl From<crate::net::enclave::Error> for LookupError {
+    fn from(value: crate::net::enclave::Error) -> Self {
+        use crate::net::enclave::Error;
         match value {
             Error::WebSocketConnect(err) => match err {
                 WebSocketConnectError::Timeout => Self::ConnectionTimedOut,
@@ -481,14 +481,14 @@ mod test {
     use uuid::Uuid;
     use warp::Filter as _;
 
-    use crate::auth::Auth;
-    use crate::infra::test::shared::InMemoryWarpConnector;
+    use crate::net::auth::Auth;
+    use crate::net::infra::test::shared::InMemoryWarpConnector;
 
-    use crate::infra::ws::testutil::{
+    use crate::net::infra::ws::testutil::{
         fake_websocket, mock_connection_info, run_attested_server, AttestedServerOutput,
         FAKE_ATTESTATION,
     };
-    use crate::infra::ws::WebSocketClient;
+    use crate::net::infra::ws::WebSocketClient;
 
     use super::*;
 
@@ -671,7 +671,7 @@ mod test {
         let fake_server = FakeServerState::default().into_handler();
         tokio::spawn(run_attested_server(
             server,
-            attest::sgx_session::testutil::private_key(),
+            crate::attest::sgx_session::testutil::private_key(),
             fake_server,
         ));
 
@@ -679,7 +679,7 @@ mod test {
         let cdsi_connection = CdsiConnection(
             AttestedConnection::connect(ws_client, |fake_attestation| {
                 assert_eq!(fake_attestation, FAKE_ATTESTATION);
-                attest::sgx_session::testutil::handshake_from_tests_data()
+                crate::attest::sgx_session::testutil::handshake_from_tests_data()
             })
             .await
             .expect("handshake failed"),
@@ -726,7 +726,7 @@ mod test {
 
         tokio::spawn(run_attested_server(
             server,
-            attest::sgx_session::testutil::private_key(),
+            crate::attest::sgx_session::testutil::private_key(),
             fake_server,
         ));
 
@@ -734,7 +734,7 @@ mod test {
         let cdsi_connection = CdsiConnection(
             AttestedConnection::connect(ws_client, |fake_attestation| {
                 assert_eq!(fake_attestation, FAKE_ATTESTATION);
-                attest::sgx_session::testutil::handshake_from_tests_data()
+                crate::attest::sgx_session::testutil::handshake_from_tests_data()
             })
             .await
             .expect("handshake failed"),
@@ -773,7 +773,7 @@ mod test {
 
         tokio::spawn(run_attested_server(
             server,
-            attest::sgx_session::testutil::private_key(),
+            crate::attest::sgx_session::testutil::private_key(),
             fake_server,
         ));
 
@@ -781,7 +781,7 @@ mod test {
         let cdsi_connection = CdsiConnection(
             AttestedConnection::connect(ws_client, |fake_attestation| {
                 assert_eq!(fake_attestation, FAKE_ATTESTATION);
-                attest::sgx_session::testutil::handshake_from_tests_data()
+                crate::attest::sgx_session::testutil::handshake_from_tests_data()
             })
             .await
             .expect("handshake failed"),
@@ -815,7 +815,7 @@ mod test {
         });
         let connector = InMemoryWarpConnector::new(h2_server);
 
-        let env = &crate::env::PROD;
+        let env = &crate::net::env::PROD;
         let endpoint_connection = EnclaveEndpointConnection::new(env.cdsi, Duration::from_secs(10));
         let auth = Auth {
             username: "username".to_string(),
@@ -846,7 +846,7 @@ mod test {
 
         tokio::spawn(run_attested_server(
             server,
-            attest::sgx_session::testutil::private_key(),
+            crate::attest::sgx_session::testutil::private_key(),
             fake_server,
         ));
 
@@ -854,7 +854,7 @@ mod test {
         let cdsi_connection = CdsiConnection(
             AttestedConnection::connect(ws_client, |fake_attestation| {
                 assert_eq!(fake_attestation, FAKE_ATTESTATION);
-                attest::sgx_session::testutil::handshake_from_tests_data()
+                crate::attest::sgx_session::testutil::handshake_from_tests_data()
             })
             .await
             .expect("handshake failed"),

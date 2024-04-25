@@ -9,15 +9,15 @@ use ::http::uri::PathAndQuery;
 use ::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 use async_trait::async_trait;
 
-use crate::chat::ws::{ChatOverWebSocketServiceConnector, ServerRequest};
-use crate::infra::connection_manager::MultiRouteConnectionManager;
-use crate::infra::reconnect::{ServiceConnectorWithDecorator, ServiceWithReconnect};
-use crate::infra::ws::WebSocketClientConnector;
-use crate::infra::{
+use crate::net::chat::ws::{ChatOverWebSocketServiceConnector, ServerRequest};
+use crate::net::infra::connection_manager::MultiRouteConnectionManager;
+use crate::net::infra::reconnect::{ServiceConnectorWithDecorator, ServiceWithReconnect};
+use crate::net::infra::ws::WebSocketClientConnector;
+use crate::net::infra::{
     ConnectionInfo, EndpointConnection, HttpRequestDecorator, IpType, TransportConnector,
 };
-use crate::proto;
-use crate::utils::basic_authorization;
+use crate::net::proto;
+use crate::net::utils::basic_authorization;
 
 pub mod chat_reconnect;
 mod error;
@@ -493,7 +493,7 @@ pub fn chat_service<T: TransportConnector + 'static>(
 
 #[cfg(test)]
 pub(crate) mod test {
-    use crate::chat::{Response, ResponseProto, ResponseProtoInvalidError};
+    use crate::net::chat::{Response, ResponseProto, ResponseProtoInvalidError};
     use assert_matches::assert_matches;
     use http::{HeaderName, HeaderValue};
 
@@ -505,13 +505,13 @@ pub(crate) mod test {
         use http::Method;
         use nonzero_ext::nonzero;
 
-        use crate::chat::{ChatService, ChatServiceError, Request, Response};
-        use crate::infra::certs::RootCertificates;
-        use crate::infra::connection_manager::SingleRouteThrottlingConnectionManager;
-        use crate::infra::errors::LogSafeDisplay;
-        use crate::infra::reconnect::{ServiceConnector, ServiceState};
-        use crate::infra::test::shared::{NoReconnectService, TIMEOUT_DURATION};
-        use crate::infra::{ConnectionParams, RouteType};
+        use crate::net::chat::{ChatService, ChatServiceError, Request, Response};
+        use crate::net::infra::certs::RootCertificates;
+        use crate::net::infra::connection_manager::SingleRouteThrottlingConnectionManager;
+        use crate::net::infra::errors::LogSafeDisplay;
+        use crate::net::infra::reconnect::{ServiceConnector, ServiceState};
+        use crate::net::infra::test::shared::{NoReconnectService, TIMEOUT_DURATION};
+        use crate::net::infra::{ConnectionParams, RouteType};
 
         #[async_trait]
         impl<C> ChatService for NoReconnectService<C>

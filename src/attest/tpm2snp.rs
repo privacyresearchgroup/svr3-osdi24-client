@@ -10,20 +10,20 @@ use boring::x509::store::X509StoreBuilder;
 use boring::x509::X509;
 use prost::Message;
 
-use crate::cert_chain::{self, CertChain};
-use crate::enclave::{Claims, Error, Handshake, Result, UnvalidatedHandshake};
-use crate::expireable::Expireable as _;
-use crate::proto::{svr, svr3};
-use crate::svr2::expected_raft_config;
+use crate::attest::cert_chain::{self, CertChain};
+use crate::attest::enclave::{Claims, Error, Handshake, Result, UnvalidatedHandshake};
+use crate::attest::expireable::Expireable as _;
+use crate::attest::proto::{svr, svr3};
+use crate::attest::svr2::expected_raft_config;
 
-use crate::constants::TPM2SNP_EXPECTED_PCRS;
+use crate::attest::constants::TPM2SNP_EXPECTED_PCRS;
 
 mod snp;
 mod tpm2;
 
 pub(crate) use tpm2::{Error as Tpm2Error, PcrMap};
 
-const GOOG_AKCERT_ROOT_PEM: &[u8] = include_bytes!("../res/goog_akcert_root.pem");
+const GOOG_AKCERT_ROOT_PEM: &[u8] = include_bytes!("../../res/goog_akcert_root.pem");
 
 pub fn new_handshake(enclave: &[u8], attestation_msg: &[u8], now: SystemTime) -> Result<Handshake> {
     let expected_raft_config = expected_raft_config(enclave, None)?;
@@ -211,12 +211,12 @@ fn verify_tpm2_quote<'a>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::constants::ENCLAVE_ID_SVR3_TPM2SNP_STAGING;
+    use crate::attest::constants::ENCLAVE_ID_SVR3_TPM2SNP_STAGING;
     use std::time::Duration;
 
     #[test]
     fn full_tpm2snp_attestation() {
-        let attestation_data = include_bytes!("../tests/data/tpm2snp_attestation_msg.dat");
+        let attestation_data = include_bytes!("../../tests/data/tpm2snp_attestation_msg.dat");
         let attestation =
             svr::ClientHandshakeStart::decode(attestation_data.as_slice()).expect("valid protobuf");
         let evidence =

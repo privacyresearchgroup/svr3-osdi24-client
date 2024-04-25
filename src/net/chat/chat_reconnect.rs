@@ -9,13 +9,13 @@ use std::time::Duration;
 use async_trait::async_trait;
 use tokio::time::Instant;
 
-use crate::chat::{
+use crate::net::chat::{
     ChatService, ChatServiceError, ChatServiceWithDebugInfo, DebugInfo, IpType, RemoteAddressInfo,
     Request, Response,
 };
-use crate::infra::connection_manager::ConnectionManager;
-use crate::infra::errors::LogSafeDisplay;
-use crate::infra::reconnect::{ServiceConnector, ServiceWithReconnect};
+use crate::net::infra::connection_manager::ConnectionManager;
+use crate::net::infra::errors::LogSafeDisplay;
+use crate::net::infra::reconnect::{ServiceConnector, ServiceWithReconnect};
 
 #[async_trait]
 impl<C, M> ChatService for ServiceWithReconnect<C, M>

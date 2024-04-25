@@ -10,7 +10,7 @@ use boring::pkey::Public;
 use sha2::Digest;
 
 /// Deserialize a 64 byte ECDSA Signature
-pub(crate) fn ecdsa_signature_from_bytes(bytes: &[u8; 64]) -> crate::dcap::Result<EcdsaSig> {
+pub(crate) fn ecdsa_signature_from_bytes(bytes: &[u8; 64]) -> crate::attest::dcap::Result<EcdsaSig> {
     let bnr = BigNum::from_slice(&bytes[..32]).expect("can always create a 32-byte bignum");
     let bns = BigNum::from_slice(&bytes[32..]).expect("can always create a 32-byte bignum");
     Ok(EcdsaSig::from_private_components(bnr, bns)?)
@@ -33,13 +33,13 @@ pub(crate) trait EcdsaSigned {
     fn data(&self) -> &[u8];
     fn signature(&self) -> &EcdsaSigRef;
 
-    fn verify_signature(&self, public_key: &EcKeyRef<Public>) -> crate::dcap::Result<()> {
+    fn verify_signature(&self, public_key: &EcKeyRef<Public>) -> crate::attest::dcap::Result<()> {
         let hash = sha2::Sha256::digest(self.data());
         let result = self.signature().verify(&hash, public_key).unwrap_or(false);
 
         if !result {
             #[cfg(not(fuzzing))]
-            return Err(crate::dcap::Error::new("data did not match signature"));
+            return Err(crate::attest::dcap::Error::new("data did not match signature"));
         }
 
         Ok(())

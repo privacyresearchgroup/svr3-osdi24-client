@@ -14,10 +14,10 @@ use nonzero_ext::nonzero;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 
-use crate::enclave::{Cdsi, EnclaveEndpoint, MrEnclave, Nitro, Sgx, Tpm2Snp};
-use crate::infra::certs::RootCertificates;
-use crate::infra::dns::LookupResult;
-use crate::infra::{
+use crate::net::enclave::{Cdsi, EnclaveEndpoint, MrEnclave, Nitro, Sgx, Tpm2Snp};
+use crate::net::infra::certs::RootCertificates;
+use crate::net::infra::dns::LookupResult;
+use crate::net::infra::{
     ConnectionParams, DnsSource, HttpRequestDecorator, HttpRequestDecoratorSeq, RouteType,
 };
 
@@ -291,24 +291,24 @@ pub const STAGING: Env<'static, Svr3Env> = Env {
     chat_domain_config: DOMAIN_CONFIG_CHAT_STAGING,
     cdsi: EnclaveEndpoint {
         domain_config: DOMAIN_CONFIG_CDSI_STAGING,
-        mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_CDSI_STAGING),
+        mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_CDSI_STAGING),
     },
     svr2: EnclaveEndpoint {
         domain_config: DOMAIN_CONFIG_SVR2_STAGING,
-        mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_SVR2_STAGING),
+        mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_SVR2_STAGING),
     },
     svr3: Svr3Env(
         EnclaveEndpoint {
             domain_config: DOMAIN_CONFIG_SVR3_SGX_STAGING,
-            mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_SVR3_SGX_STAGING),
+            mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_SVR3_SGX_STAGING),
         },
         EnclaveEndpoint {
             domain_config: DOMAIN_CONFIG_SVR3_NITRO_STAGING,
-            mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_SVR3_NITRO_STAGING),
+            mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_SVR3_NITRO_STAGING),
         },
         EnclaveEndpoint {
             domain_config: DOMAIN_CONFIG_SVR3_TPM2SNP_STAGING,
-            mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_SVR3_TPM2SNP_STAGING),
+            mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_SVR3_TPM2SNP_STAGING),
         },
     ),
 };
@@ -317,24 +317,24 @@ pub const PROD: Env<'static, Svr3Env> = Env {
     chat_domain_config: DOMAIN_CONFIG_CHAT,
     cdsi: EnclaveEndpoint {
         domain_config: DOMAIN_CONFIG_CDSI,
-        mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_CDSI_PROD),
+        mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_CDSI_PROD),
     },
     svr2: EnclaveEndpoint {
         domain_config: DOMAIN_CONFIG_SVR2,
-        mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_SVR2_PROD),
+        mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_SVR2_PROD),
     },
     svr3: Svr3Env(
         EnclaveEndpoint {
             domain_config: DOMAIN_CONFIG_SVR3_SGX,
-            mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_SVR3_SGX_PROD),
+            mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_SVR3_SGX_PROD),
         },
         EnclaveEndpoint {
             domain_config: DOMAIN_CONFIG_SVR3_NITRO,
-            mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_SVR3_NITRO_PROD),
+            mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_SVR3_NITRO_PROD),
         },
         EnclaveEndpoint {
             domain_config: DOMAIN_CONFIG_SVR3_TPM2SNP,
-            mr_enclave: MrEnclave::new(attest::constants::ENCLAVE_ID_SVR3_TPM2SNP_PROD),
+            mr_enclave: MrEnclave::new(crate::attest::constants::ENCLAVE_ID_SVR3_TPM2SNP_PROD),
         },
     ),
 };

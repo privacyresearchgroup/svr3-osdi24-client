@@ -8,10 +8,10 @@
 use sha2::Digest;
 use std::collections::HashMap;
 
-use crate::dcap::sgx_quote::SgxQuote;
-use crate::dcap::{Error, Expireable};
-use crate::error::Context;
-use crate::util;
+use crate::attest::dcap::sgx_quote::SgxQuote;
+use crate::attest::dcap::{Error, Expireable};
+use crate::attest::error::Context;
+use crate::attest::util;
 
 // Inline header file references are paths from the root of the repository tree.
 // https://github.com/openenclave/openenclave/tree/v0.17.7
@@ -138,7 +138,7 @@ impl CustomClaims<'_> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::dcap::MREnclave;
+    use crate::attest::dcap::MREnclave;
     use hex_literal::hex;
 
     const EXPECTED_MRENCLAVE: MREnclave =
@@ -146,8 +146,8 @@ mod test {
 
     #[test]
     fn from_bytes() {
-        const DATA: &[u8] = include_bytes!("../../tests/data/dcap.evidence");
-        let pkey = hex::decode(include_bytes!("../../tests/data/dcap.pubkey")).unwrap();
+        const DATA: &[u8] = include_bytes!("../../../tests/data/dcap.evidence");
+        let pkey = hex::decode(include_bytes!("../../../tests/data/dcap.pubkey")).unwrap();
 
         let evidence = Evidence::try_from(DATA).expect("should parse");
         assert_eq!(pkey, evidence.claims.map.get("pk").unwrap().as_slice());

@@ -14,9 +14,9 @@ use std::time::Duration;
 
 use prost::Message;
 
-use crate::dcap::{self, MREnclave};
-use crate::enclave::{Claims, Error, Handshake, Result, UnvalidatedHandshake};
-use crate::proto::svr::AttestationData;
+use crate::attest::dcap::{self, MREnclave};
+use crate::attest::enclave::{Claims, Error, Handshake, Result, UnvalidatedHandshake};
+use crate::attest::proto::svr::AttestationData;
 
 const INVALID_EVIDENCE: &str = "Evidence does not fit expected format";
 const INVALID_ENDORSEMENT: &str = "Endorsement does not fit expected format";
@@ -80,12 +80,12 @@ pub mod testutil {
 
     use super::*;
 
-    pub const EVIDENCE_BYTES: &[u8] = include_bytes!("../tests/data/cds2_test.evidence");
-    pub const ENDORSEMENT_BYTES: &[u8] = include_bytes!("../tests/data/cds2_test.endorsements");
+    pub const EVIDENCE_BYTES: &[u8] = include_bytes!("../../tests/data/cds2_test.evidence");
+    pub const ENDORSEMENT_BYTES: &[u8] = include_bytes!("../../tests/data/cds2_test.endorsements");
 
     pub fn mrenclave_bytes() -> Vec<u8> {
         let mut mrenclave_bytes = vec![0u8; 32];
-        let mrenclave_str = include_bytes!("../tests/data/cds2_test.mrenclave");
+        let mrenclave_str = include_bytes!("../../tests/data/cds2_test.mrenclave");
         hex::decode_to_slice(mrenclave_str, &mut mrenclave_bytes)
             .expect("Failed to decode mrenclave from hex string");
         mrenclave_bytes
@@ -93,7 +93,7 @@ pub mod testutil {
 
     pub fn private_key() -> [u8; 32] {
         let mut private_key = [0; 32];
-        let private_key_hex = include_bytes!("../tests/data/cds2_test.privatekey");
+        let private_key_hex = include_bytes!("../../tests/data/cds2_test.privatekey");
         hex::decode_to_slice(private_key_hex, &mut private_key)
             .expect("Failed to decode private key from hex string");
         private_key
@@ -123,7 +123,7 @@ pub mod testutil {
 mod tests {
     use std::time::{Duration, SystemTime};
 
-    use crate::client_connection;
+    use crate::attest::client_connection;
 
     use super::*;
 

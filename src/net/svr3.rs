@@ -6,16 +6,16 @@
 use thiserror::Error;
 use std::time::{Duration, SystemTime};
 
-use crate::enclave::{IntoConnections, PpssSetup};
-use crate::infra::errors::LogSafeDisplay;
-use crate::infra::ws::{
+use crate::net::enclave::{IntoConnections, PpssSetup};
+use crate::net::infra::errors::LogSafeDisplay;
+use crate::net::infra::ws::{
     run_attested_interaction, AttestedConnectionError, WebSocketConnectError, WebSocketServiceError,
 };
-use crate::infra::AsyncDuplexStream;
+use crate::net::infra::AsyncDuplexStream;
 use async_trait::async_trait;
 use bincode::Options as _;
 use futures_util::future::try_join_all;
-use libsignal_svr3::{Backup, MaskedShareSet, Restore};
+use crate::svr3::{Backup, MaskedShareSet, Restore};
 use rand_core::CryptoRngCore;
 use serde::{Deserialize, Serialize};
 use std::num::NonZeroU32;
@@ -145,9 +145,9 @@ pub enum Error {
     /// Protocol error after establishing a connection: {0}
     Protocol(String),
     /// Enclave attestation failed: {0}
-    AttestationError(attest::enclave::Error),
+    AttestationError(crate::attest::enclave::Error),
     /// SVR3 request failed with status {0}
-    RequestFailed(libsignal_svr3::ErrorStatus),
+    RequestFailed(crate::svr3::ErrorStatus),
     /// Failure to restore data
     ///
     /// This could be caused by an invalid password or share set.
@@ -167,18 +167,18 @@ impl From<DeserializeError> for Error {
     }
 }
 
-impl From<attest::enclave::Error> for Error {
-    fn from(err: attest::enclave::Error) -> Self {
+impl From<crate::attest::enclave::Error> for Error {
+    fn from(err: crate::attest::enclave::Error) -> Self {
         Self::AttestationError(err)
     }
 }
 
-impl From<libsignal_svr3::Error> for Error {
-    fn from(err: libsignal_svr3::Error) -> Self {
-        use libsignal_svr3::{Error as LogicError, PPSSError};
+impl From<crate::svr3::Error> for Error {
+    fn from(err: crate::svr3::Error) -> Self {
+        use crate::svr3::{Error as LogicError, PPSSError};
         match err {
             LogicError::Ppss(PPSSError::InvalidCommitment) => Self::RestoreFailed,
-            LogicError::BadResponseStatus(libsignal_svr3::ErrorStatus::Missing) => {
+            LogicError::BadResponseStatus(crate::svr3::ErrorStatus::Missing) => {
                 Self::DataMissing
             }
             LogicError::Oprf(_)

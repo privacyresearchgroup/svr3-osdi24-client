@@ -56,8 +56,8 @@ mod tests {
     use curve25519_dalek::scalar::Scalar;
     use hex_literal::hex;
 
-    use crate::oprf::ciphersuite::tests::derive_key_pair;
-    use crate::oprf::client::{apply_blind, finalize};
+    use crate::svr3::oprf::ciphersuite::tests::derive_key_pair;
+    use crate::svr3::oprf::client::{apply_blind, finalize};
 
     fn blind_evaluate(sk: &Scalar, blinded_element: &RistrettoPoint) -> RistrettoPoint {
         sk * blinded_element

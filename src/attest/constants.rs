@@ -5,9 +5,9 @@
 
 use hex_literal::hex;
 
-use crate::svr2::RaftConfig;
-use crate::util::SmallMap;
-use crate::{nitro, tpm2snp};
+use crate::attest::svr2::RaftConfig;
+use crate::attest::util::SmallMap;
+use crate::attest::{nitro, tpm2snp};
 
 pub const ENCLAVE_ID_CDSI_STAGING: &[u8] =
     &hex!("0f6fd79cdfdaa5b2e6337f534d3baf999318b0c462a7ac1f41297a3e4b424a57");

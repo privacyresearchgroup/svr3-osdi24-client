@@ -15,8 +15,8 @@ use sha2::{Digest, Sha256};
 use std::convert::TryInto;
 use subtle::ConstantTimeEq;
 
-use crate::oprf;
-use crate::oprf::errors::OPRFError;
+use crate::svr3::oprf;
+use crate::svr3::oprf::errors::OPRFError;
 
 #[derive(Display, Debug)]
 pub enum PPSSError {

@@ -10,8 +10,8 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
 use async_trait::async_trait;
-use attest::client_connection::ClientConnection;
-use attest::enclave;
+use crate::attest::client_connection::ClientConnection;
+use crate::attest::enclave;
 use derive_where::derive_where;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt as _, StreamExt, TryFutureExt};
@@ -24,13 +24,13 @@ use tungstenite::handshake::client::generate_key;
 use tungstenite::protocol::CloseFrame;
 use tungstenite::{http, Message};
 
-use crate::infra::errors::LogSafeDisplay;
-use crate::infra::reconnect::{ServiceConnector, ServiceStatus};
-use crate::infra::ws::error::{HttpFormatError, ProtocolError, SpaceError};
-use crate::infra::{
+use crate::net::infra::errors::LogSafeDisplay;
+use crate::net::infra::reconnect::{ServiceConnector, ServiceStatus};
+use crate::net::infra::ws::error::{HttpFormatError, ProtocolError, SpaceError};
+use crate::net::infra::{
     Alpn, AsyncDuplexStream, ConnectionInfo, ConnectionParams, StreamAndInfo, TransportConnector,
 };
-use crate::utils::timeout;
+use crate::net::utils::timeout;
 
 pub mod error;
 pub use error::{Error, WebSocketConnectError};
@@ -429,13 +429,13 @@ where
 #[derive(Debug)]
 pub enum AttestedConnectionError {
     Protocol,
-    ClientConnection(attest::client_connection::Error),
-    Sgx(attest::enclave::Error),
+    ClientConnection(crate::attest::client_connection::Error),
+    Sgx(crate::attest::enclave::Error),
     WebSocket(WebSocketServiceError),
 }
 
 impl From<enclave::Error> for AttestedConnectionError {
-    fn from(value: attest::enclave::Error) -> Self {
+    fn from(value: crate::attest::enclave::Error) -> Self {
         Self::Sgx(value)
     }
 }
@@ -446,8 +446,8 @@ impl From<WebSocketServiceError> for AttestedConnectionError {
     }
 }
 
-impl From<attest::client_connection::Error> for AttestedConnectionError {
-    fn from(value: attest::client_connection::Error) -> Self {
+impl From<crate::attest::client_connection::Error> for AttestedConnectionError {
+    fn from(value: crate::attest::client_connection::Error) -> Self {
         Self::ClientConnection(value)
     }
 }
@@ -611,7 +611,7 @@ async fn authenticate<S: AsyncDuplexStream>(
         .try_into_binary()?;
     let connect1_duration = SystemTime::now().duration_since(connect1_start).unwrap().as_micros();
     // now extract the attestation document from the message
-    let handshake_start_msg = attest::proto::svr::ClientHandshakeStart::decode(attestation_msg.as_ref()).expect("valid hs start");
+    let handshake_start_msg = crate::attest::proto::svr::ClientHandshakeStart::decode(attestation_msg.as_ref()).expect("valid hs start");
     let evidence = handshake_start_msg.evidence;
 
     let hs_start = SystemTime::now();
@@ -641,8 +641,8 @@ pub(crate) mod testutil {
     use tokio::io::DuplexStream;
     use tokio_tungstenite::WebSocketStream;
 
-    use crate::env::{WS_KEEP_ALIVE_INTERVAL, WS_MAX_IDLE_TIME};
-    use crate::infra::{AsyncDuplexStream, DnsSource, RouteType};
+    use crate::net::env::{WS_KEEP_ALIVE_INTERVAL, WS_MAX_IDLE_TIME};
+    use crate::net::infra::{AsyncDuplexStream, DnsSource, RouteType};
 
     use super::*;
 
@@ -679,7 +679,7 @@ pub(crate) mod testutil {
     }
 
     pub(crate) const FAKE_ATTESTATION: &[u8] =
-        include_bytes!("../../../attest/tests/data/svr2handshakestart.data");
+        include_bytes!("../../../tests/data/svr2handshakestart.data");
 
     /// Response to an incoming frame.
     ///
@@ -721,7 +721,7 @@ pub(crate) mod testutil {
         let mut websocket = websocket_test_client(websocket);
         // Start the server with a known private key (K of NK).
         let mut server_hs =
-            snow::Builder::new(attest::client_connection::NOISE_PATTERN.parse().unwrap())
+            snow::Builder::new(crate::attest::client_connection::NOISE_PATTERN.parse().unwrap())
                 .local_private_key(private_key.as_ref())
                 .build_responder()
                 .unwrap();
@@ -907,13 +907,13 @@ mod test {
         let (server, client) = fake_websocket().await;
         tokio::task::spawn(run_attested_echo_server(
             server,
-            attest::sgx_session::testutil::private_key(),
+            crate::attest::sgx_session::testutil::private_key(),
         ));
 
         let mut connection =
             AttestedConnection::connect(websocket_test_client(client), |fake_attestation| {
                 assert_eq!(fake_attestation, FAKE_ATTESTATION);
-                attest::sgx_session::testutil::handshake_from_tests_data()
+                crate::attest::sgx_session::testutil::handshake_from_tests_data()
             })
             .await
             .unwrap();
@@ -929,11 +929,11 @@ mod test {
         let (server, client) = fake_websocket().await;
         tokio::task::spawn(run_attested_echo_server(
             server,
-            attest::sgx_session::testutil::private_key(),
+            crate::attest::sgx_session::testutil::private_key(),
         ));
 
-        fn fail_to_handshake(_attestation: &[u8]) -> attest::enclave::Result<enclave::Handshake> {
-            Err(attest::enclave::Error::AttestationDataError {
+        fn fail_to_handshake(_attestation: &[u8]) -> crate::attest::enclave::Result<enclave::Handshake> {
+            Err(crate::attest::enclave::Error::AttestationDataError {
                 reason: "invalid".to_string(),
             })
         }
@@ -950,13 +950,13 @@ mod test {
         let (server, client) = fake_websocket().await;
         tokio::task::spawn(run_attested_echo_server(
             server,
-            attest::sgx_session::testutil::private_key(),
+            crate::attest::sgx_session::testutil::private_key(),
         ));
 
         let mut connection =
             AttestedConnection::connect(websocket_test_client(client), |fake_attestation| {
                 assert_eq!(fake_attestation, FAKE_ATTESTATION);
-                attest::sgx_session::testutil::handshake_from_tests_data()
+                crate::attest::sgx_session::testutil::handshake_from_tests_data()
             })
             .await
             .unwrap();

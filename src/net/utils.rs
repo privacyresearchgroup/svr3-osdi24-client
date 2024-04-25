@@ -51,7 +51,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::utils::first_ok;
+    use crate::net::utils::first_ok;
     use std::time::Duration;
 
     #[tokio::test(start_paused = true)]

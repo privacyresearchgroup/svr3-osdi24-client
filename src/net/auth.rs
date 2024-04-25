@@ -7,8 +7,8 @@ use std::time::SystemTime;
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
 
-use crate::infra::HttpRequestDecorator;
-use crate::utils::basic_authorization;
+use crate::net::infra::HttpRequestDecorator;
+use crate::net::utils::basic_authorization;
 
 pub trait HttpBasicAuth {
     fn username(&self) -> &str;

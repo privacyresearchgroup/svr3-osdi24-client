@@ -5,8 +5,8 @@
 
 use std::collections::HashMap;
 
-use crate::dcap::{Error, Result};
-use crate::error::Context;
+use crate::attest::dcap::{Error, Result};
+use crate::attest::error::Context;
 use asn1::{oid, ObjectIdentifier, SequenceOf};
 use boring::asn1::Asn1ObjectRef;
 use boring::nid::Nid;
@@ -383,7 +383,7 @@ mod test {
 
     #[test]
     fn test_deserialization() {
-        const DATA: &[u8] = include_bytes!("../../tests/data/sgx_x509_extension.der");
+        const DATA: &[u8] = include_bytes!("../../../tests/data/sgx_x509_extension.der");
 
         let ext = SgxPckExtension::from_der(DATA).unwrap();
 

@@ -39,17 +39,17 @@ use hex::ToHex;
 use lazy_static::lazy_static;
 use uuid::Uuid;
 
-use crate::dcap::ecdsa::EcdsaSigned;
-use crate::dcap::endorsements::{
+use crate::attest::dcap::ecdsa::EcdsaSigned;
+use crate::attest::dcap::endorsements::{
     EnclaveType, QeTcbStatus, SgxEndorsements, TcbInfo, TcbLevel, TcbStatus,
 };
-use crate::dcap::evidence::Evidence;
-pub use crate::dcap::sgx_report_body::MREnclave;
-use crate::dcap::sgx_report_body::SgxFlags;
-use crate::dcap::sgx_x509::SgxPckExtension;
-use crate::enclave::AttestationError;
-use crate::error::{Context, ContextError};
-use crate::expireable::Expireable;
+use crate::attest::dcap::evidence::Evidence;
+pub use crate::attest::dcap::sgx_report_body::MREnclave;
+use crate::attest::dcap::sgx_report_body::SgxFlags;
+use crate::attest::dcap::sgx_x509::SgxPckExtension;
+use crate::attest::enclave::AttestationError;
+use crate::attest::error::{Context, ContextError};
+use crate::attest::expireable::Expireable;
 
 mod ecdsa;
 mod endorsements;
@@ -652,8 +652,8 @@ mod test {
 
     use std::time::{Duration, SystemTime};
 
-    use crate::dcap::endorsements::{QeTcbLevel, TcbInfoVersion};
-    use crate::dcap::fakes::FakeAttestation;
+    use crate::attest::dcap::endorsements::{QeTcbLevel, TcbInfoVersion};
+    use crate::attest::dcap::fakes::FakeAttestation;
     use boring::bn::BigNum;
     use hex_literal::hex;
 
@@ -669,8 +669,8 @@ mod test {
         let current_time: SystemTime =
             SystemTime::UNIX_EPOCH + Duration::from_millis(1674105089000);
 
-        let evidence_bytes = include_bytes!("../tests/data/dcap.evidence");
-        let endorsements_bytes = include_bytes!("../tests/data/dcap.endorsements");
+        let evidence_bytes = include_bytes!("../../tests/data/dcap.evidence");
+        let endorsements_bytes = include_bytes!("../../tests/data/dcap.endorsements");
 
         let pubkey = verify_remote_attestation(
             evidence_bytes.as_ref(),
@@ -684,7 +684,7 @@ mod test {
         .unwrap()
         .to_owned();
 
-        let expected_pubkey = hex::decode(include_bytes!("../tests/data/dcap.pubkey")).unwrap();
+        let expected_pubkey = hex::decode(include_bytes!("../../tests/data/dcap.pubkey")).unwrap();
         assert_eq!(&expected_pubkey, pubkey.as_slice());
     }
 
@@ -695,8 +695,8 @@ mod test {
         let current_time: SystemTime =
             SystemTime::UNIX_EPOCH + Duration::from_millis(1657856984000);
 
-        let evidence_bytes = include_bytes!("../tests/data/dcap_v3.evidence");
-        let endorsements_bytes = include_bytes!("../tests/data/dcap_v3.endorsements");
+        let evidence_bytes = include_bytes!("../../tests/data/dcap_v3.evidence");
+        let endorsements_bytes = include_bytes!("../../tests/data/dcap_v3.endorsements");
 
         let pubkey = verify_remote_attestation(
             evidence_bytes.as_ref(),
@@ -710,7 +710,7 @@ mod test {
         .unwrap()
         .to_owned();
 
-        let expected_pubkey = hex::decode(include_bytes!("../tests/data/dcap_v3.pubkey")).unwrap();
+        let expected_pubkey = hex::decode(include_bytes!("../../tests/data/dcap_v3.pubkey")).unwrap();
         assert_eq!(&expected_pubkey, pubkey.as_slice());
     }
 
@@ -719,8 +719,8 @@ mod test {
         let current_time: SystemTime =
             SystemTime::UNIX_EPOCH + Duration::from_millis(1674105089000);
 
-        let evidence_bytes = include_bytes!("../tests/data/dcap.evidence");
-        let endorsements_bytes = include_bytes!("../tests/data/dcap.endorsements");
+        let evidence_bytes = include_bytes!("../../tests/data/dcap.evidence");
+        let endorsements_bytes = include_bytes!("../../tests/data/dcap.endorsements");
 
         let sw_advisories = &[ACCEPTED_SW_ADVISORIES, &["INTEL-SA-1234"]].concat();
 
@@ -736,14 +736,14 @@ mod test {
         .unwrap()
         .to_owned();
 
-        let expected_pubkey = hex::decode(include_bytes!("../tests/data/dcap.pubkey")).unwrap();
+        let expected_pubkey = hex::decode(include_bytes!("../../tests/data/dcap.pubkey")).unwrap();
         assert_eq!(expected_pubkey, pubkey.as_slice());
     }
 
     #[test]
     fn test_attestation_metrics() {
-        const EVIDENCE_BYTES: &[u8] = include_bytes!("../tests/data/dcap.evidence");
-        const ENDORSEMENTS_BYTES: &[u8] = include_bytes!("../tests/data/dcap.endorsements");
+        const EVIDENCE_BYTES: &[u8] = include_bytes!("../../tests/data/dcap.evidence");
+        const ENDORSEMENTS_BYTES: &[u8] = include_bytes!("../../tests/data/dcap.endorsements");
         let metrics = attestation_metrics(EVIDENCE_BYTES, ENDORSEMENTS_BYTES).unwrap();
         // 2023-02-17 21:56:09 UTC
         assert_eq!(
@@ -767,8 +767,8 @@ mod test {
         let current_time: SystemTime =
             SystemTime::UNIX_EPOCH + Duration::from_millis(1652744306000);
 
-        let evidence_bytes = include_bytes!("../tests/data/dcap-expired.evidence");
-        let endorsements_bytes = include_bytes!("../tests/data/dcap-expired.endorsements");
+        let evidence_bytes = include_bytes!("../../tests/data/dcap-expired.evidence");
+        let endorsements_bytes = include_bytes!("../../tests/data/dcap-expired.endorsements");
 
         assert!(verify_remote_attestation(
             evidence_bytes.as_ref(),

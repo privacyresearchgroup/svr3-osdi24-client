@@ -6,26 +6,26 @@
 use std::marker::PhantomData;
 use std::time::{Duration, SystemTime};
 
-use attest::svr2::RaftConfig;
-use attest::{cds2, enclave, nitro, tpm2snp};
+use crate::attest::svr2::RaftConfig;
+use crate::attest::{cds2, enclave, nitro, tpm2snp};
 use derive_where::derive_where;
 use http::uri::PathAndQuery;
 
-use crate::auth::HttpBasicAuth;
-use crate::env::{DomainConfig, Svr3Env};
-use crate::infra::connection_manager::{
+use crate::net::auth::HttpBasicAuth;
+use crate::net::env::{DomainConfig, Svr3Env};
+use crate::net::infra::connection_manager::{
     ConnectionManager, MultiRouteConnectionManager, SingleRouteThrottlingConnectionManager,
 };
-use crate::infra::errors::LogSafeDisplay;
-use crate::infra::reconnect::{ServiceConnectorWithDecorator, ServiceInitializer, ServiceState};
-use crate::infra::ws::{
+use crate::net::infra::errors::LogSafeDisplay;
+use crate::net::infra::reconnect::{ServiceConnectorWithDecorator, ServiceInitializer, ServiceState};
+use crate::net::infra::ws::{
     AttestedConnection, AttestedConnectionError, WebSocketClientConnector, WebSocketConnectError,
     WebSocketServiceError,
 };
-use crate::infra::{
+use crate::net::infra::{
     make_ws_config, AsyncDuplexStream, ConnectionParams, EndpointConnection, TransportConnector,
 };
-use crate::svr::SvrConnection;
+use crate::net::svr::SvrConnection;
 
 pub trait EnclaveKind {
     fn url_path(enclave: &[u8]) -> PathAndQuery;
@@ -235,7 +235,7 @@ pub enum Error {
     /// Protocol error after establishing a connection
     Protocol,
     /// Enclave attestation failed: {0}
-    AttestationError(attest::enclave::Error),
+    AttestationError(crate::attest::enclave::Error),
     /// Connection timeout
     ConnectionTimedOut,
 }
@@ -344,7 +344,7 @@ impl NewHandshake for Sgx {
         params: &EndpointParams<Self>,
         attestation_message: &[u8],
     ) -> enclave::Result<enclave::Handshake> {
-        attest::svr2::new_handshake_with_override(
+        crate::attest::svr2::new_handshake_with_override(
             params.mr_enclave.as_ref(),
             attestation_message,
             SystemTime::now(),
@@ -358,7 +358,7 @@ impl NewHandshake for SgxTest {
         _params: &EndpointParams<Self>,
         attestation_message: &[u8],
     ) -> enclave::Result<enclave::Handshake> {
-        attest::svr2::new_handshake_simulated(
+        crate::attest::svr2::new_handshake_simulated(
             attestation_message,
         )
     }

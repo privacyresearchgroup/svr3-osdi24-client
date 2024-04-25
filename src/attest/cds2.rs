@@ -8,10 +8,10 @@ use std::collections::HashMap;
 use hex_literal::hex;
 use prost::Message;
 
-use crate::dcap::{self, MREnclave};
-use crate::enclave::{Handshake, Result};
-use crate::proto::cds2;
-use crate::util::SmallMap;
+use crate::attest::dcap::{self, MREnclave};
+use crate::attest::enclave::{Handshake, Result};
+use crate::attest::proto::cds2;
+use crate::attest::util::SmallMap;
 
 /// Map from MREnclave to intel SW advisories that are known to be mitigated in the
 /// build with that MREnclave value.
@@ -71,8 +71,8 @@ mod test {
         let mrenclave = hex!("39d78f17f8aa9a8e9cdaf16595947a057bac21f014d1abfd6a99b2dfd4e18d1d");
 
         let attestation_msg = cds2::ClientHandshakeStart {
-            evidence: include_bytes!("../tests/data/cds2_test.evidence").to_vec(),
-            endorsement: include_bytes!("../tests/data/cds2_test.endorsements").to_vec(),
+            evidence: include_bytes!("../../tests/data/cds2_test.evidence").to_vec(),
+            endorsement: include_bytes!("../../tests/data/cds2_test.endorsements").to_vec(),
             ..Default::default()
         };
 

@@ -359,10 +359,10 @@ mod test {
     use hex_literal::hex;
     use test_case::test_case;
 
-    const VALID_SIGNATURE: &[u8] = include_bytes!("../../tests/data/tpm2_valid_signature.dat");
-    const VALID_REPORT: &[u8] = include_bytes!("../../tests/data/tpm2_valid_report.dat");
-    const VALID_PCRS: &[u8] = include_bytes!("../../tests/data/tpm2_valid_pcrs.dat");
-    const VALID_CERT_PEM: &[u8] = include_bytes!("../../tests/data/tpm2snp_valid_cert.pem");
+    const VALID_SIGNATURE: &[u8] = include_bytes!("../../../tests/data/tpm2_valid_signature.dat");
+    const VALID_REPORT: &[u8] = include_bytes!("../../../tests/data/tpm2_valid_report.dat");
+    const VALID_PCRS: &[u8] = include_bytes!("../../../tests/data/tpm2_valid_pcrs.dat");
+    const VALID_CERT_PEM: &[u8] = include_bytes!("../../../tests/data/tpm2snp_valid_cert.pem");
 
     #[test]
     fn parse_valid_signature() {

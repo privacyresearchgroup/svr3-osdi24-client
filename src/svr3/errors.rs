@@ -2,8 +2,8 @@
 // Copyright 2023 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
-pub use crate::oprf::errors::OPRFError;
-pub use crate::ppss::PPSSError;
+pub use crate::svr3::oprf::errors::OPRFError;
+pub use crate::svr3::ppss::PPSSError;
 use prost::DecodeError;
 
 #[derive(Debug, displaydoc::Display)]

@@ -20,8 +20,8 @@ const SIGNATURE_OFFSET: usize = 0x2A0;
 const REPORT_DATA_OFFSET: usize = 0x50;
 const SHA256_SIZE: usize = 32;
 
-pub const ARK_GENOA_ROOT_PEM: &[u8] = include_bytes!("../../res/ark_genoa.pem");
-pub const ARK_MILAN_ROOT_PEM: &[u8] = include_bytes!("../../res/ark_milan.pem");
+pub const ARK_GENOA_ROOT_PEM: &[u8] = include_bytes!("../../../res/ark_genoa.pem");
+pub const ARK_MILAN_ROOT_PEM: &[u8] = include_bytes!("../../../res/ark_milan.pem");
 
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, displaydoc::Display)]

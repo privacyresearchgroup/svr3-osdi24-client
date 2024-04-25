@@ -15,17 +15,17 @@ use prost::Message;
 use tokio::sync::{mpsc, oneshot, Mutex};
 use tokio_tungstenite::WebSocketStream;
 
-use crate::chat::{
+use crate::net::chat::{
     ChatMessageType, ChatService, ChatServiceError, MessageProto, RemoteAddressInfo, Request,
     RequestProto, Response, ResponseProto,
 };
-use crate::infra::reconnect::{ServiceConnector, ServiceStatus};
-use crate::infra::ws::{
+use crate::net::infra::reconnect::{ServiceConnector, ServiceStatus};
+use crate::net::infra::ws::{
     NextOrClose, TextOrBinary, WebSocketClient, WebSocketClientConnector, WebSocketClientReader,
     WebSocketClientWriter, WebSocketConnectError, WebSocketServiceError,
 };
-use crate::infra::{AsyncDuplexStream, ConnectionInfo, ConnectionParams, TransportConnector};
-use crate::proto::chat_websocket::web_socket_message::Type;
+use crate::net::infra::{AsyncDuplexStream, ConnectionInfo, ConnectionParams, TransportConnector};
+use crate::net::proto::chat_websocket::web_socket_message::Type;
 
 #[derive(Debug, Default, Eq, Hash, PartialEq, Clone, Copy)]
 struct RequestId {
@@ -363,18 +363,18 @@ mod test {
     use tokio::time::Instant;
     use warp::{Filter, Reply};
 
-    use crate::chat::test::shared::{connection_manager, test_request};
-    use crate::chat::ws::{
+    use crate::net::chat::test::shared::{connection_manager, test_request};
+    use crate::net::chat::ws::{
         decode_and_validate, request_to_websocket_proto, ChatMessage,
         ChatOverWebSocketServiceConnector, ChatServiceError, RequestId, ServerRequest,
     };
-    use crate::chat::{ChatMessageType, ChatService, MessageProto, ResponseProto};
+    use crate::net::chat::{ChatMessageType, ChatService, MessageProto, ResponseProto};
 
-    use crate::infra::test::shared::{
+    use crate::net::infra::test::shared::{
         InMemoryWarpConnector, NoReconnectService, TestError, TIMEOUT_DURATION,
     };
-    use crate::infra::ws::{WebSocketClientConnector, WebSocketConfig, WebSocketServiceError};
-    use crate::proto::chat_websocket::WebSocketMessage;
+    use crate::net::infra::ws::{WebSocketClientConnector, WebSocketConfig, WebSocketServiceError};
+    use crate::net::proto::chat_websocket::WebSocketMessage;
 
     fn test_ws_config() -> WebSocketConfig {
         WebSocketConfig {

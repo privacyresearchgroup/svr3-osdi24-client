@@ -16,8 +16,8 @@ pub fn hash_to_group(data: &[u8]) -> RistrettoPoint {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::oprf::errors::OPRFError;
-    use crate::oprf::util::{expand_message_xmd_sha512, i2osp_u16};
+    use crate::svr3::oprf::errors::OPRFError;
+    use crate::svr3::oprf::util::{expand_message_xmd_sha512, i2osp_u16};
     use curve25519_dalek::constants;
     use curve25519_dalek::ristretto::RistrettoPoint;
     use curve25519_dalek::scalar::Scalar;

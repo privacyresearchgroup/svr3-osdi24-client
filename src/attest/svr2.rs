@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-use crate::constants::{ACCEPTABLE_SW_ADVISORIES, DEFAULT_SW_ADVISORIES, EXPECTED_RAFT_CONFIG};
+use crate::attest::constants::{ACCEPTABLE_SW_ADVISORIES, DEFAULT_SW_ADVISORIES, EXPECTED_RAFT_CONFIG};
 use prost::Message;
 
-use crate::enclave::{Error, Handshake, Result};
-use crate::proto::svr;
+use crate::attest::enclave::{Error, Handshake, Result};
+use crate::attest::proto::svr;
 
 /// A RaftConfig that can be checked against the attested remote config
 #[derive(Debug)]
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn attest_svr2() {
-        const HANDSHAKE_BYTES: &[u8] = include_bytes!("../tests/data/svr2handshakestart.data");
+        const HANDSHAKE_BYTES: &[u8] = include_bytes!("../../tests/data/svr2handshakestart.data");
         let current_time = SystemTime::UNIX_EPOCH + Duration::from_secs(1709245753);
         let mrenclave_bytes =
             hex!("acb1973aa0bbbd14b3b4e06f145497d948fd4a98efc500fcce363b3b743ec482");
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn attest_svr2_bad_config() {
-        const HANDSHAKE_BYTES: &[u8] = include_bytes!("../tests/data/svr2handshakestart.data");
+        const HANDSHAKE_BYTES: &[u8] = include_bytes!("../../tests/data/svr2handshakestart.data");
         let current_time = SystemTime::UNIX_EPOCH + Duration::from_secs(1709245753);
         let mrenclave_bytes =
             hex!("acb1973aa0bbbd14b3b4e06f145497d948fd4a98efc500fcce363b3b743ec482");

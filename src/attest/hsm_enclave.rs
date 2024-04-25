@@ -11,7 +11,7 @@
 use log::*;
 use std::fmt;
 
-use crate::{client_connection, snow_resolver};
+use crate::attest::{client_connection, snow_resolver};
 
 /// Error types for HSM enclave.
 #[derive(Debug, thiserror::Error)]

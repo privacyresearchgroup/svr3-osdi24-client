@@ -15,12 +15,12 @@ use prost::{DecodeError, Message};
 use sha2::{Digest, Sha384};
 use subtle::ConstantTimeEq;
 
-use crate::enclave::{self, Claims, Handshake};
-use crate::proto;
-use crate::svr2::{expected_raft_config, RaftConfig};
-use crate::util::SmallMap;
+use crate::attest::enclave::{self, Claims, Handshake};
+use crate::attest::proto;
+use crate::attest::svr2::{expected_raft_config, RaftConfig};
+use crate::attest::util::SmallMap;
 
-use crate::constants::NITRO_EXPECTED_PCRS;
+use crate::attest::constants::NITRO_EXPECTED_PCRS;
 
 // A type for Platform Configuration Register values
 // They are Sha-384 hashes, 48 byte long.
@@ -419,7 +419,7 @@ impl AttestationDoc {
     }
 }
 
-const ROOT_CERTIFICATE_PEM: &[u8] = include_bytes!("../res/nitro_root_certificate.pem");
+const ROOT_CERTIFICATE_PEM: &[u8] = include_bytes!("../../res/nitro_root_certificate.pem");
 
 #[cfg(test)]
 mod test {
@@ -636,10 +636,10 @@ mod test {
         });
     }
 
-    const VALID_DOCUMENT_BYTES_1: &[u8] = include_bytes!("../tests/data/test_cose_sign1_01.dat");
+    const VALID_DOCUMENT_BYTES_1: &[u8] = include_bytes!("../../tests/data/test_cose_sign1_01.dat");
     const VALID_DOCUMENT_BYTES_1_CANONICAL: &[u8] =
-        include_bytes!("../tests/data/cose_sign1_canonical.dat");
-    const VALID_DOCUMENT_BYTES_2: &[u8] = include_bytes!("../tests/data/test_cose_sign1_02.dat");
+        include_bytes!("../../tests/data/cose_sign1_canonical.dat");
+    const VALID_DOCUMENT_BYTES_2: &[u8] = include_bytes!("../../tests/data/test_cose_sign1_02.dat");
 
     fn get_test_pcrs() -> PcrMap {
         PcrMap::new(

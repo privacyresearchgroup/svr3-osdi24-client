@@ -15,8 +15,8 @@ use async_trait::async_trait;
 use tokio::sync::Mutex;
 use tokio::time::{timeout_at, Instant};
 
-use crate::infra::errors::LogSafeDisplay;
-use crate::infra::ConnectionParams;
+use crate::net::infra::errors::LogSafeDisplay;
+use crate::net::infra::ConnectionParams;
 
 pub(crate) const MAX_COOLDOWN_INTERVAL: Duration = Duration::from_secs(64);
 
@@ -278,12 +278,12 @@ mod test {
     use nonzero_ext::nonzero;
     use tokio::time;
 
-    use crate::infra::certs::RootCertificates;
-    use crate::infra::test::shared::{
+    use crate::net::infra::certs::RootCertificates;
+    use crate::net::infra::test::shared::{
         TestError, FEW_ATTEMPTS, LONG_CONNECTION_TIME, MANY_ATTEMPTS, TIMEOUT_DURATION,
         TIME_ADVANCE_VALUE,
     };
-    use crate::infra::{HttpRequestDecoratorSeq, RouteType};
+    use crate::net::infra::{HttpRequestDecoratorSeq, RouteType};
 
     use super::*;
 

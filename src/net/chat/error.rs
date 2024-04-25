@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-use crate::infra::errors::LogSafeDisplay;
-use crate::infra::reconnect;
-use crate::infra::ws::WebSocketServiceError;
+use crate::net::infra::errors::LogSafeDisplay;
+use crate::net::infra::reconnect;
+use crate::net::infra::ws::WebSocketServiceError;
 
 #[derive(Debug, thiserror::Error, displaydoc::Display)]
 pub enum ChatServiceError {

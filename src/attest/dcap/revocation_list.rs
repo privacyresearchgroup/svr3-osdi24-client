@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-use crate::dcap::{Error, Expireable, Result};
+use crate::attest::dcap::{Error, Expireable, Result};
 use boring::nid::Nid;
 use boring::x509::crl::{X509CRLRef, X509CRL};
 use std::collections::HashSet;
@@ -16,7 +16,7 @@ pub(crate) struct RevocationList {
 
 impl Expireable for RevocationList {
     fn valid_at(&self, timestamp: SystemTime) -> bool {
-        crate::util::system_time_to_asn1_time(timestamp)
+        crate::attest::util::system_time_to_asn1_time(timestamp)
             .ok()
             .zip(self.crl.next_update())
             .and_then(|(now, next_update)| now.compare(next_update).ok())

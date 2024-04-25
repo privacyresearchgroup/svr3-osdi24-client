@@ -17,14 +17,14 @@ use boring::x509::crl::X509CRL;
 use boring::x509::X509;
 use lazy_static::lazy_static;
 
-use crate::cert_chain::CertChain;
-use crate::dcap;
-use crate::error::ContextError;
-use crate::expireable::Expireable;
+use crate::attest::cert_chain::CertChain;
+use crate::attest::dcap;
+use crate::attest::error::ContextError;
+use crate::attest::expireable::Expireable;
 
-const IAS_ROOT_CERT_DER: &[u8] = include_bytes!("../res/ias-root.cer");
+const IAS_ROOT_CERT_DER: &[u8] = include_bytes!("../../res/ias-root.cer");
 // Available from https://trustedservices.intel.com/content/CRL/SGX/AttestationReportSigningCA.crl
-const IAS_ROOT_CERT_CRL_PEM: &[u8] = include_bytes!("../res/AttestationReportSigningCA.crl");
+const IAS_ROOT_CERT_CRL_PEM: &[u8] = include_bytes!("../../res/AttestationReportSigningCA.crl");
 
 lazy_static! {
     static ref IAS_ROOT_CERT: X509 =
@@ -181,12 +181,12 @@ mod test {
         decode_block(string.as_str()).unwrap()
     }
 
-    const GOOD_PEM: &[u8] = include_bytes!("../tests/data/ias-sig-cert.pem");
+    const GOOD_PEM: &[u8] = include_bytes!("../../tests/data/ias-sig-cert.pem");
     lazy_static! {
         static ref GOOD_SIGNATURE: Vec<u8> =
             base64_to_bytes("Hj4zz2gLX+g1T4avpcpXxmBqI5bpKKLOy4HLCTO0PwKcV+Q3fhDJVuVy0+SEgzC1TlmARKyH/DVynWu3pA9FA+4BvZxb7nLbaMG4PXdYu56sHDCzFVPsm9TPgqsVu5PbVXatZQ0oVxMkzKtPae3fy/ootXkG+4ahOU6Hwqa0Uy6+HYzL2CJZRJjHV6/iZjgTLjYsQqS0mZiaUuFoqn8RRb8/f7/9SujDSLa8dmKBqaZCtZpeHh4posLWjOhTJx07FhBRh5EV01gXFfys56h2NTc7MpmYbzt2onfH/3lDM8DfdNUJl0TfikzJyVdLWXi0MyAS2nrRhHFwVp365FYEJg==");
         static ref GOOD_MESSAGE: Vec<u8> = base64_to_bytes(
-            std::str::from_utf8(include_bytes!("../tests/data/ias-valid-message.txt"))
+            std::str::from_utf8(include_bytes!("../../tests/data/ias-valid-message.txt"))
                 .expect("Invalid UTF-8")
         );
 

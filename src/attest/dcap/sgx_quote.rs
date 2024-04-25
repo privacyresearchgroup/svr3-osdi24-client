@@ -18,14 +18,14 @@ use sha2::Digest;
 use std::intrinsics::transmute;
 use std::time::SystemTime;
 
-use crate::cert_chain::CertChain;
-use crate::dcap::ecdsa::{ecdsa_signature_from_bytes, EcdsaSigned};
-use crate::dcap::sgx_report_body::SgxReportBody;
-use crate::dcap::sgx_x509::SgxPckExtension;
-use crate::dcap::{Error, Expireable};
-use crate::endian::*;
-use crate::error::Context;
-use crate::util;
+use crate::attest::cert_chain::CertChain;
+use crate::attest::dcap::ecdsa::{ecdsa_signature_from_bytes, EcdsaSigned};
+use crate::attest::dcap::sgx_report_body::SgxReportBody;
+use crate::attest::dcap::sgx_x509::SgxPckExtension;
+use crate::attest::dcap::{Error, Expireable};
+use crate::attest::endian::*;
+use crate::attest::error::Context;
+use crate::attest::util;
 
 pub(crate) struct SgxQuote<'a> {
     /// The Quote Header (A.4.3) and the Independent
@@ -363,7 +363,7 @@ mod tests {
     use std::fs;
     use std::path::Path;
 
-    use crate::cert_chain::testutil::cert_chain;
+    use crate::attest::cert_chain::testutil::cert_chain;
 
     #[test]
     fn valid_quote_from_disk() {

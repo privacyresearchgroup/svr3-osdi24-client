@@ -7,7 +7,7 @@ use std::fmt::Display;
 
 use tokio_boring::HandshakeError;
 
-use crate::infra::certs;
+use crate::net::infra::certs;
 
 pub trait LogSafeDisplay: Display {}
 

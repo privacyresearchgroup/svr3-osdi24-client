@@ -9,7 +9,7 @@ use bitflags::bitflags;
 
 use std::intrinsics::transmute;
 
-use crate::endian::*;
+use crate::attest::endian::*;
 
 // Inline header file references are paths from the root of the repository tree.
 // https://github.com/openenclave/openenclave/tree/v0.17.7

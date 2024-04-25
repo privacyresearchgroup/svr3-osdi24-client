@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
-use crate::chat::RemoteAddressInfo;
+use crate::net::chat::RemoteAddressInfo;
 use async_trait::async_trait;
 use derive_where::derive_where;
 use displaydoc::Display;
@@ -16,9 +16,9 @@ use tokio::sync::Mutex;
 use tokio::time::{timeout_at, Instant};
 use tokio_util::sync::CancellationToken;
 
-use crate::infra::connection_manager::{ConnectionAttemptOutcome, ConnectionManager};
-use crate::infra::errors::LogSafeDisplay;
-use crate::infra::{ConnectionInfo, ConnectionParams, HttpRequestDecorator};
+use crate::net::infra::connection_manager::{ConnectionAttemptOutcome, ConnectionManager};
+use crate::net::infra::errors::LogSafeDisplay;
+use crate::net::infra::{ConnectionInfo, ConnectionParams, HttpRequestDecorator};
 
 /// For a service that needs to go through some initialization procedure
 /// before it's ready for use, this enum describes its possible states.
@@ -40,8 +40,8 @@ pub(crate) enum ServiceState<T, CE, SE> {
 }
 
 /// Represents the logic needed to establish a connection over some transport.
-/// See [crate::chat::http::ChatOverHttp2ServiceConnector]
-/// and [crate::chat::ws::ChatOverWebSocketServiceConnector]
+/// See [crate::net::chat::http::ChatOverHttp2ServiceConnector]
+/// and [crate::net::chat::ws::ChatOverWebSocketServiceConnector]
 #[async_trait]
 pub(crate) trait ServiceConnector: Clone {
     type Service;
@@ -475,19 +475,19 @@ mod test {
     use tokio::time;
     use tokio::time::Instant;
 
-    use crate::infra::certs::RootCertificates;
-    use crate::infra::connection_manager::{
+    use crate::net::infra::certs::RootCertificates;
+    use crate::net::infra::connection_manager::{
         SingleRouteThrottlingConnectionManager, COOLDOWN_INTERVALS, MAX_COOLDOWN_INTERVAL,
     };
-    use crate::infra::reconnect::{
+    use crate::net::infra::reconnect::{
         ReconnectError, ServiceConnector, ServiceState, ServiceStatus, ServiceWithReconnect,
         StateError,
     };
-    use crate::infra::test::shared::{
+    use crate::net::infra::test::shared::{
         TestError, LONG_CONNECTION_TIME, NORMAL_CONNECTION_TIME, TIMEOUT_DURATION,
         TIME_ADVANCE_VALUE,
     };
-    use crate::infra::{ConnectionParams, HttpRequestDecoratorSeq, RouteType};
+    use crate::net::infra::{ConnectionParams, HttpRequestDecoratorSeq, RouteType};
 
     #[derive(Clone, Debug)]
     struct TestService {

@@ -16,13 +16,13 @@ use tokio::net::TcpStream;
 use tokio_boring::SslStream;
 use tokio_util::either::Either;
 
-use crate::infra::certs::RootCertificates;
-use crate::infra::dns::DnsResolver;
-use crate::infra::errors::TransportConnectError;
-use crate::infra::{
+use crate::net::infra::certs::RootCertificates;
+use crate::net::infra::dns::DnsResolver;
+use crate::net::infra::errors::TransportConnectError;
+use crate::net::infra::{
     Alpn, ConnectionInfo, ConnectionParams, RouteType, StreamAndInfo, TransportConnector,
 };
-use crate::utils::first_ok;
+use crate::net::utils::first_ok;
 
 const CONNECTION_ATTEMPT_DELAY: Duration = Duration::from_millis(200);
 
@@ -569,8 +569,8 @@ mod test {
 
     use assert_matches::assert_matches;
 
-    use crate::infra::dns::LookupResult;
-    use crate::infra::HttpRequestDecoratorSeq;
+    use crate::net::infra::dns::LookupResult;
+    use crate::net::infra::HttpRequestDecoratorSeq;
 
     use super::testutil::*;
     use super::*;
@@ -601,7 +601,7 @@ mod test {
             info,
             ConnectionInfo {
                 address: url::Host::Ipv6(Ipv6Addr::LOCALHOST),
-                dns_source: crate::infra::DnsSource::Static,
+                dns_source: crate::net::infra::DnsSource::Static,
                 route_type: RouteType::Test,
             }
         );
@@ -651,7 +651,7 @@ mod test {
             info,
             ConnectionInfo {
                 address: url::Host::Ipv6(Ipv6Addr::LOCALHOST),
-                dns_source: crate::infra::DnsSource::Static,
+                dns_source: crate::net::infra::DnsSource::Static,
                 route_type: RouteType::TlsProxy,
             }
         );
@@ -696,7 +696,7 @@ mod test {
             info,
             ConnectionInfo {
                 address: url::Host::Ipv6(Ipv6Addr::LOCALHOST),
-                dns_source: crate::infra::DnsSource::Static,
+                dns_source: crate::net::infra::DnsSource::Static,
                 route_type: RouteType::TlsProxy
             }
         );

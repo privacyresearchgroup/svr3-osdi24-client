@@ -9,19 +9,19 @@ use std::string::ToString;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::env::{WS_KEEP_ALIVE_INTERVAL, WS_MAX_IDLE_TIME};
+use crate::net::env::{WS_KEEP_ALIVE_INTERVAL, WS_MAX_IDLE_TIME};
 use ::http::uri::PathAndQuery;
 use ::http::Uri;
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 use url::Host;
 
-use crate::infra::certs::RootCertificates;
-use crate::infra::connection_manager::{
+use crate::net::infra::certs::RootCertificates;
+use crate::net::infra::connection_manager::{
     MultiRouteConnectionManager, SingleRouteThrottlingConnectionManager,
 };
-use crate::infra::errors::TransportConnectError;
-use crate::infra::ws::WebSocketConfig;
+use crate::net::infra::errors::TransportConnectError;
+use crate::net::infra::ws::WebSocketConfig;
 
 pub mod certs;
 pub mod connection_manager;
@@ -293,8 +293,8 @@ pub fn make_ws_config(
 pub(crate) mod test {
     use http::Request;
 
-    use crate::infra::HttpRequestDecorator;
-    use crate::utils::basic_authorization;
+    use crate::net::infra::HttpRequestDecorator;
+    use crate::net::utils::basic_authorization;
 
     pub(crate) mod shared {
         use std::fmt::Debug;
@@ -308,12 +308,12 @@ pub(crate) mod test {
         use tokio::io::DuplexStream;
         use warp::{Filter, Reply};
 
-        use crate::infra::connection_manager::ConnectionManager;
-        use crate::infra::errors::{LogSafeDisplay, TransportConnectError};
-        use crate::infra::reconnect::{
+        use crate::net::infra::connection_manager::ConnectionManager;
+        use crate::net::infra::errors::{LogSafeDisplay, TransportConnectError};
+        use crate::net::infra::reconnect::{
             ServiceConnector, ServiceInitializer, ServiceState, ServiceStatus,
         };
-        use crate::infra::{
+        use crate::net::infra::{
             Alpn, ConnectionInfo, ConnectionParams, DnsSource, RouteType, StreamAndInfo,
             TransportConnector,
         };

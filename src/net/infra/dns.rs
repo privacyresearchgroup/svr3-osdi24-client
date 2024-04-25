@@ -13,8 +13,8 @@ use std::sync::Arc;
 use std::time::Duration;
 use std::vec::IntoIter;
 
-use crate::infra::DnsSource;
-use crate::utils;
+use crate::net::infra::DnsSource;
+use crate::net::utils;
 
 const RESOLUTION_TIMEOUT: Duration = Duration::from_secs(1);
 const SIGNAL_DOMAIN_SUFFIX: &str = ".signal.org";
@@ -67,7 +67,7 @@ impl LookupResult {
 impl LookupResult {
     pub(crate) fn localhost() -> Self {
         Self::new(
-            crate::infra::DnsSource::Static,
+            crate::net::infra::DnsSource::Static,
             vec![Ipv4Addr::LOCALHOST],
             vec![Ipv6Addr::LOCALHOST],
         )
@@ -158,8 +158,8 @@ impl<D: DnsLookup> DnsResolver<D> {
 
 #[cfg(test)]
 mod test {
-    use crate::infra::dns::{DnsLookup, DnsResolver, Error, LookupResult};
-    use crate::infra::DnsSource;
+    use crate::net::infra::dns::{DnsLookup, DnsResolver, Error, LookupResult};
+    use crate::net::infra::DnsSource;
     use assert_matches::assert_matches;
     use async_trait::async_trait;
     use const_str::ip_addr;

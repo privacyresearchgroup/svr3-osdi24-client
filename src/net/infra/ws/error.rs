@@ -9,7 +9,7 @@
 
 use std::borrow::Borrow;
 
-use crate::infra::errors::{LogSafeDisplay, TransportConnectError};
+use crate::net::infra::errors::{LogSafeDisplay, TransportConnectError};
 
 /// Errors that can occur when connecting a websocket.
 #[derive(Debug, thiserror::Error, displaydoc::Display)]
