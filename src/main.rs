@@ -1,9 +1,7 @@
 //
 // Copyright 2024 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
-//
-//! An example program demonstrating the backup and restore capabilities of a built-in Svr3Env.
-//!
+
 //! One would need to provide a valid auth secret value used to authenticate to the enclave,
 //! as well as the password that will be used to protect the data being stored. Since the
 //! actual stored secret data needs to be exactly 32 bytes long, it is generated randomly
